@@ -119,5 +119,36 @@ namespace UniversityGradesSystem.Services
                 return false;
             }
         }
+
+
+        public int? GetStudentGrade(int studentId, int disciplineId)
+        {
+            try
+            {
+                using (var conn = new NpgsqlConnection(_connectionString))
+                {
+                    conn.Open();
+                    using (var cmd = new NpgsqlCommand(@"
+                        SELECT g.grade 
+                        FROM grades g
+                        JOIN discipline_semester ds ON g.discipline_semester_id = ds.id
+                        WHERE g.student_id = @studentId AND ds.discipline_id = @disciplineId
+                        ORDER BY g.id DESC
+                        LIMIT 1", conn))
+                    {
+                        cmd.Parameters.AddWithValue("studentId", studentId);
+                        cmd.Parameters.AddWithValue("disciplineId", disciplineId);
+
+                        var result = cmd.ExecuteScalar();
+                        return result != null ? (int?)result : null;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                DatabaseManager.Instance.LogAction(null, "ERROR", $"Ошибка получения оценки студента {studentId} по дисциплине {disciplineId}: {ex.Message}");
+                return null;
+            }
+        }
     }
 }

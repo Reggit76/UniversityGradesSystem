@@ -96,13 +96,35 @@ namespace UniversityGradesSystem.Forms
 
         private void AddGradeEntryTab()
         {
-            TabPage gradeTab = new TabPage("Выставить оценки");
-            GradeEntryForm gradeForm = new GradeEntryForm(userId);
-            gradeForm.TopLevel = false;
-            gradeForm.FormBorderStyle = FormBorderStyle.None;
-            gradeForm.Dock = DockStyle.Fill;
-            gradeTab.Controls.Add(gradeForm);
-            tabControl.TabPages.Add(gradeTab);
+            try
+            {
+                TabPage gradeTab = new TabPage("Выставить оценки");
+
+                // Создаем форму выставления оценок
+                GradeEntryForm gradeForm = new GradeEntryForm(userId);
+
+                // Настраиваем форму для встраивания
+                gradeForm.TopLevel = false;
+                gradeForm.FormBorderStyle = FormBorderStyle.None;
+                gradeForm.Dock = DockStyle.Fill;
+                gradeForm.Visible = true; // ВАЖНО: делаем форму видимой
+
+                // Добавляем форму на вкладку
+                gradeTab.Controls.Add(gradeForm);
+
+                // Показываем форму
+                gradeForm.Show();
+
+                // Добавляем вкладку в TabControl
+                tabControl.TabPages.Add(gradeTab);
+
+                DatabaseManager.Instance.LogAction(userId, "TAB_CREATED", "Создана вкладка выставления оценок");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка создания вкладки выставления оценок: {ex.Message}");
+                DatabaseManager.Instance.LogAction(userId, "ERROR", $"Ошибка создания вкладки оценок: {ex.Message}");
+            }
         }
 
         private void AddAdminTabs()
