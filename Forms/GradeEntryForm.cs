@@ -101,34 +101,73 @@ namespace UniversityGradesSystem.Forms
         private void InitializeDataGridView()
         {
             dgvStudents.Columns.Clear();
+            dgvStudents.AllowUserToAddRows = false;
+            dgvStudents.AllowUserToDeleteRows = false;
+            dgvStudents.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvStudents.MultiSelect = false;
+            dgvStudents.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
 
-            dgvStudents.Columns.Add(new DataGridViewTextBoxColumn
+            // Колонка ID (скрытая)
+            var idColumn = new DataGridViewTextBoxColumn
             {
                 Name = "Id",
                 HeaderText = "ID",
-                DataPropertyName = "Id",
                 ReadOnly = true,
                 Visible = false
-            });
+            };
+            dgvStudents.Columns.Add(idColumn);
 
-            dgvStudents.Columns.Add(new DataGridViewTextBoxColumn
+            // Колонка ФИО
+            var nameColumn = new DataGridViewTextBoxColumn
             {
                 Name = "FullName",
                 HeaderText = "ФИО студента",
-                Width = 400,
-                ReadOnly = true
-            });
+                ReadOnly = true,
+                FillWeight = 70
+            };
+            dgvStudents.Columns.Add(nameColumn);
 
+            // Колонка оценки - ИСПРАВЛЕНИЕ: правильная настройка ComboBox
             var gradeColumn = new DataGridViewComboBoxColumn
             {
                 Name = "Grade",
                 HeaderText = "Оценка",
-                DataSource = new List<int?> { null, 2, 3, 4, 5 },
+                FillWeight = 30,
+                DisplayStyle = DataGridViewComboBoxDisplayStyle.ComboBox,
                 ValueType = typeof(int?),
-                Width = 150,
-                DisplayStyle = DataGridViewComboBoxDisplayStyle.ComboBox
+                DisplayMember = "Text",
+                ValueMember = "Value"
             };
+
+            // Создаем список значений для ComboBox
+            var gradeItems = new List<object>
+            {
+                new { Text = "Не выбрано", Value = (int?)null },
+                new { Text = "2", Value = (int?)2 },
+                new { Text = "3", Value = (int?)3 },
+                new { Text = "4", Value = (int?)4 },
+                new { Text = "5", Value = (int?)5 }
+            };
+
+            gradeColumn.DataSource = gradeItems;
             dgvStudents.Columns.Add(gradeColumn);
+
+            // Настройка внешнего вида
+            dgvStudents.RowHeadersVisible = false;
+            dgvStudents.BackgroundColor = System.Drawing.Color.White;
+            dgvStudents.BorderStyle = BorderStyle.Fixed3D;
+            dgvStudents.DefaultCellStyle.SelectionBackColor = System.Drawing.Color.LightBlue;
+            dgvStudents.DefaultCellStyle.SelectionForeColor = System.Drawing.Color.Black;
+            dgvStudents.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.LightGray;
+            dgvStudents.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold);
+
+            // Обработчик ошибок DataGridView
+            dgvStudents.DataError += (sender, e) =>
+            {
+                // Подавляем ошибки валидации ComboBox
+                e.ThrowException = false;
+                Console.WriteLine($"DataGridView error: {e.Exception?.Message}");
+            };
         }
 
         private void LoadGroups()
@@ -214,6 +253,12 @@ namespace UniversityGradesSystem.Forms
                     // Очищаем DataGridView
                     dgvStudents.Rows.Clear();
 
+                    if (students == null || students.Count == 0)
+                    {
+                        MessageBox.Show("В выбранной группе нет студентов");
+                        return;
+                    }
+
                     // Добавляем студентов
                     foreach (var student in students)
                     {
@@ -227,18 +272,25 @@ namespace UniversityGradesSystem.Forms
                         if (cmbDiscipline.SelectedItem is Discipline selectedDiscipline)
                         {
                             var existingGrade = gradeService.GetStudentGrade(student.Id, selectedDiscipline.Id);
-                            row.Cells["Grade"].Value = existingGrade;
+                            row.Cells["Grade"].Value = existingGrade; // Теперь передаем int? напрямую
                         }
                         else
                         {
                             row.Cells["Grade"].Value = null;
                         }
                     }
+
+                    Console.WriteLine($"Загружено студентов: {students.Count}");
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show($"Ошибка загрузки студентов: {ex.Message}");
+                    Console.WriteLine($"Ошибка LoadStudents: {ex.Message}");
                 }
+            }
+            else
+            {
+                dgvStudents.Rows.Clear();
             }
         }
 
@@ -266,18 +318,21 @@ namespace UniversityGradesSystem.Forms
                     {
                         if (!row.IsNewRow && row.Cells["Grade"].Value != null && row.Cells["Id"].Value != null)
                         {
-                            int studentId = (int)row.Cells["Id"].Value;
-                            int grade = (int)row.Cells["Grade"].Value;
-                            int disciplineId = selectedDiscipline.Id;
+                            // Проверяем, что оценка не равна null (не выбрано "Не выбрано")
+                            if (row.Cells["Grade"].Value is int gradeValue && gradeValue >= 2 && gradeValue <= 5)
+                            {
+                                int studentId = (int)row.Cells["Id"].Value;
+                                int disciplineId = selectedDiscipline.Id;
 
-                            // Используем корректный метод сервиса
-                            if (gradeService.SaveGrade(studentId, disciplineId, grade))
-                            {
-                                savedCount++;
-                            }
-                            else
-                            {
-                                errorCount++;
+                                // Используем корректный метод сервиса
+                                if (gradeService.SaveGrade(studentId, disciplineId, gradeValue))
+                                {
+                                    savedCount++;
+                                }
+                                else
+                                {
+                                    errorCount++;
+                                }
                             }
                         }
                     }
@@ -289,28 +344,29 @@ namespace UniversityGradesSystem.Forms
                         {
                             message += $"\nОшибок при сохранении: {errorCount}";
                         }
-                        MessageBox.Show(message);
+                        MessageBox.Show(message, "Результат сохранения", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                         // Обновляем отображение после сохранения
                         LoadStudents();
                     }
                     else if (errorCount > 0)
                     {
-                        MessageBox.Show($"Все оценки ({errorCount}) не удалось сохранить. Проверьте логи.");
+                        MessageBox.Show($"Все оценки ({errorCount}) не удалось сохранить. Проверьте логи.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                     else
                     {
-                        MessageBox.Show("Не было выставлено ни одной оценки");
+                        MessageBox.Show("Не было выставлено ни одной оценки", "Информация", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
                 else
                 {
-                    MessageBox.Show("Выберите группу и дисциплину");
+                    MessageBox.Show("Выберите группу и дисциплину", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка сохранения оценок: {ex.Message}");
+                MessageBox.Show($"Ошибка сохранения оценок: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Console.WriteLine($"Ошибка BtnSave_Click: {ex.Message}");
             }
         }
     }

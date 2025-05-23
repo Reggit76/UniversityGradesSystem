@@ -85,24 +85,23 @@ namespace UniversityGradesSystem.Services
                 using (var conn = new NpgsqlConnection(_connectionString))
                 {
                     conn.Open();
+
+                    // Получаем discipline_semester_id
+                    int disciplineSemesterId = GetOrCreateDisciplineSemesterId(disciplineId, conn);
+
                     using (var cmd = new NpgsqlCommand(@"
-                        INSERT INTO grades (student_id, discipline_id, grade, created_at)
-                        VALUES (@studentId, @disciplineId, @grade, NOW())
-                        ON CONFLICT (student_id, discipline_id)
-                        DO UPDATE SET
-                            grade = EXCLUDED.grade,
-                            updated_at = NOW()
-                        RETURNING id", conn))
+                INSERT INTO grades (student_id, discipline_semester_id, grade)
+                VALUES (@studentId, @disciplineSemesterId, @grade)
+                ON CONFLICT (student_id, discipline_semester_id)
+                DO UPDATE SET grade = EXCLUDED.grade
+                RETURNING id", conn))
                     {
-                        // Добавляем параметры для предотвращения SQL-инъекций
                         cmd.Parameters.AddWithValue("studentId", studentId);
-                        cmd.Parameters.AddWithValue("disciplineId", disciplineId);
+                        cmd.Parameters.AddWithValue("disciplineSemesterId", disciplineSemesterId);
                         cmd.Parameters.AddWithValue("grade", grade);
 
-                        // Выполняем команду и проверяем результат
                         var result = cmd.ExecuteScalar();
 
-                        // Логируем успешную операцию
                         DatabaseManager.Instance.LogAction(null, "INFO",
                             $"Оценка сохранена для студента {studentId} по дисциплине {disciplineId}: {grade}");
 
@@ -112,14 +111,49 @@ namespace UniversityGradesSystem.Services
             }
             catch (Exception ex)
             {
-                // Логируем ошибку
                 DatabaseManager.Instance.LogAction(null, "ERROR",
                     $"Ошибка сохранения оценки: {ex.Message}");
-
                 return false;
             }
         }
 
+        // Получить или создать discipline_semester_id
+        private int GetOrCreateDisciplineSemesterId(int disciplineId, NpgsqlConnection conn)
+        {
+            // Сначала ищем существующую запись
+            using (var cmd = new NpgsqlCommand(@"
+        SELECT ds.id 
+        FROM discipline_semester ds 
+        WHERE ds.discipline_id = @disciplineId 
+        LIMIT 1", conn))
+            {
+                cmd.Parameters.AddWithValue("disciplineId", disciplineId);
+                var result = cmd.ExecuteScalar();
+                if (result != null)
+                {
+                    return (int)result;
+                }
+            }
+
+            // Если не найдена, создаем новую (берем первый семестр)
+            using (var cmd = new NpgsqlCommand(@"
+        INSERT INTO discipline_semester (discipline_id, semester_id)
+        SELECT @disciplineId, s.id 
+        FROM semesters s 
+        ORDER BY s.number 
+        LIMIT 1
+        RETURNING id", conn))
+            {
+                cmd.Parameters.AddWithValue("disciplineId", disciplineId);
+                var result = cmd.ExecuteScalar();
+                if (result != null)
+                {
+                    return (int)result;
+                }
+            }
+
+            throw new Exception($"Не удалось найти или создать discipline_semester для дисциплины {disciplineId}");
+        }
 
         public int? GetStudentGrade(int studentId, int disciplineId)
         {
