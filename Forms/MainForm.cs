@@ -18,6 +18,7 @@ namespace UniversityGradesSystem.Forms
         private TabControl tabControl;
         private DataGridView studentGrid;
         private DataGridView disciplineGrid;
+        private StatusStrip statusStrip;
 
         public MainForm(int userId, string role)
         {
@@ -25,7 +26,7 @@ namespace UniversityGradesSystem.Forms
             this.userId = userId;
             this.role = role;
             this.Text = $"Система учета успеваемости - {role.ToUpper()}";
-            this.WindowState = FormWindowState.Maximized; // Развернуть окно
+            this.WindowState = FormWindowState.Maximized;
 
             this.connString = DatabaseManager.Instance.GetConnectionString();
 
@@ -39,13 +40,33 @@ namespace UniversityGradesSystem.Forms
 
         private void InitializeUI()
         {
+            this.SuspendLayout();
+
             // === Настройка формы ===
             this.BackColor = Color.FromArgb(245, 245, 245);
-            this.Icon = SystemIcons.Application; // Добавляем иконку
+            this.Icon = SystemIcons.Application;
+            this.MinimumSize = new Size(1000, 600);
 
-            // === Статус бар ===
-            StatusStrip statusStrip = new StatusStrip();
+            // === Статус бар (создаем первым, чтобы он был внизу) ===
+            CreateStatusBar();
+
+            // === Главный TabControl ===
+            CreateMainTabControl();
+
+            // === Базовые вкладки ===
+            CreateStudentsTab();
+            CreateDisciplinesTab();
+            CreateEnhancedAnalyticsTab();
+
+            this.ResumeLayout(false);
+            this.PerformLayout();
+        }
+
+        private void CreateStatusBar()
+        {
+            statusStrip = new StatusStrip();
             statusStrip.BackColor = Color.FromArgb(52, 73, 94);
+            statusStrip.SizingGrip = false;
 
             ToolStripStatusLabel statusLabel = new ToolStripStatusLabel();
             statusLabel.Text = $"Пользователь: {userId} | Роль: {role.ToUpper()} | {DateTime.Now:HH:mm:ss}";
@@ -60,19 +81,16 @@ namespace UniversityGradesSystem.Forms
 
             statusStrip.Items.AddRange(new ToolStripItem[] { statusLabel, connectionStatus });
             this.Controls.Add(statusStrip);
+        }
 
-            // === Главный TabControl ===
+        private void CreateMainTabControl()
+        {
             tabControl = new TabControl();
             tabControl.Dock = DockStyle.Fill;
             tabControl.Font = new Font("Segoe UI", 10F);
             tabControl.Appearance = TabAppearance.FlatButtons;
             tabControl.Padding = new Point(15, 8);
             tabControl.ItemSize = new Size(120, 35);
-
-            // === Базовые вкладки ===
-            CreateStudentsTab();
-            CreateDisciplinesTab();
-            CreateEnhancedAnalyticsTab(); // Новая улучшенная аналитика
 
             this.Controls.Add(tabControl);
         }
@@ -81,15 +99,25 @@ namespace UniversityGradesSystem.Forms
         {
             TabPage studentTab = new TabPage("👥 Студенты");
             studentTab.BackColor = Color.FromArgb(250, 250, 250);
-            studentTab.Padding = new Padding(10);
+            studentTab.UseVisualStyleBackColor = true;
+
+            // Главный контейнер
+            TableLayoutPanel mainLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 2,
+                Padding = new Padding(10)
+            };
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F));
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
             // Панель инструментов
             Panel toolPanel = new Panel
             {
-                Height = 50,
-                Dock = DockStyle.Top,
+                Dock = DockStyle.Fill,
                 BackColor = Color.White,
-                Padding = new Padding(10, 10, 10, 10)
+                Padding = new Padding(15, 10, 15, 10)
             };
             toolPanel.BorderStyle = BorderStyle.FixedSingle;
 
@@ -97,12 +125,14 @@ namespace UniversityGradesSystem.Forms
             {
                 Text = "Список студентов",
                 Font = new Font("Segoe UI", 12F, FontStyle.Bold),
-                Location = new Point(10, 15),
+                Dock = DockStyle.Left,
                 AutoSize = true,
-                ForeColor = Color.FromArgb(52, 73, 94)
+                ForeColor = Color.FromArgb(52, 73, 94),
+                TextAlign = ContentAlignment.MiddleLeft
             };
 
             toolPanel.Controls.Add(titleLabel);
+            mainLayout.Controls.Add(toolPanel, 0, 0);
 
             // Таблица студентов
             studentGrid = new DataGridView
@@ -117,7 +147,9 @@ namespace UniversityGradesSystem.Forms
                 ReadOnly = true,
                 SelectionMode = DataGridViewSelectionMode.FullRowSelect,
                 AllowUserToAddRows = false,
-                AllowUserToDeleteRows = false
+                AllowUserToDeleteRows = false,
+                AllowUserToResizeRows = false,
+                RowHeadersVisible = false
             };
 
             // Стилизация заголовков
@@ -125,8 +157,10 @@ namespace UniversityGradesSystem.Forms
             studentGrid.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
             studentGrid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             studentGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            studentGrid.ColumnHeadersHeight = 35;
 
-            studentTab.Controls.AddRange(new Control[] { toolPanel, studentGrid });
+            mainLayout.Controls.Add(studentGrid, 0, 1);
+            studentTab.Controls.Add(mainLayout);
             tabControl.TabPages.Add(studentTab);
         }
 
@@ -134,15 +168,25 @@ namespace UniversityGradesSystem.Forms
         {
             TabPage disciplineTab = new TabPage("📚 Мои дисциплины");
             disciplineTab.BackColor = Color.FromArgb(250, 250, 250);
-            disciplineTab.Padding = new Padding(10);
+            disciplineTab.UseVisualStyleBackColor = true;
+
+            // Главный контейнер
+            TableLayoutPanel mainLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 2,
+                Padding = new Padding(10)
+            };
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F));
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
             // Панель инструментов
             Panel toolPanel = new Panel
             {
-                Height = 50,
-                Dock = DockStyle.Top,
+                Dock = DockStyle.Fill,
                 BackColor = Color.White,
-                Padding = new Padding(10, 10, 10, 10)
+                Padding = new Padding(15, 10, 15, 10)
             };
             toolPanel.BorderStyle = BorderStyle.FixedSingle;
 
@@ -150,12 +194,14 @@ namespace UniversityGradesSystem.Forms
             {
                 Text = "Преподаваемые дисциплины",
                 Font = new Font("Segoe UI", 12F, FontStyle.Bold),
-                Location = new Point(10, 15),
+                Dock = DockStyle.Left,
                 AutoSize = true,
-                ForeColor = Color.FromArgb(52, 73, 94)
+                ForeColor = Color.FromArgb(52, 73, 94),
+                TextAlign = ContentAlignment.MiddleLeft
             };
 
             toolPanel.Controls.Add(titleLabel);
+            mainLayout.Controls.Add(toolPanel, 0, 0);
 
             // Таблица дисциплин
             disciplineGrid = new DataGridView
@@ -170,7 +216,9 @@ namespace UniversityGradesSystem.Forms
                 ReadOnly = true,
                 SelectionMode = DataGridViewSelectionMode.FullRowSelect,
                 AllowUserToAddRows = false,
-                AllowUserToDeleteRows = false
+                AllowUserToDeleteRows = false,
+                AllowUserToResizeRows = false,
+                RowHeadersVisible = false
             };
 
             // Стилизация заголовков
@@ -178,8 +226,10 @@ namespace UniversityGradesSystem.Forms
             disciplineGrid.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
             disciplineGrid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             disciplineGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            disciplineGrid.ColumnHeadersHeight = 35;
 
-            disciplineTab.Controls.AddRange(new Control[] { toolPanel, disciplineGrid });
+            mainLayout.Controls.Add(disciplineGrid, 0, 1);
+            disciplineTab.Controls.Add(mainLayout);
             tabControl.TabPages.Add(disciplineTab);
         }
 
@@ -187,6 +237,7 @@ namespace UniversityGradesSystem.Forms
         {
             TabPage analyticsTab = new TabPage("📊 Аналитика");
             analyticsTab.BackColor = Color.FromArgb(240, 244, 247);
+            analyticsTab.UseVisualStyleBackColor = true;
 
             try
             {
@@ -212,7 +263,9 @@ namespace UniversityGradesSystem.Forms
                     Dock = DockStyle.Fill,
                     TextAlign = ContentAlignment.MiddleCenter,
                     Font = new Font("Segoe UI", 12F),
-                    ForeColor = Color.Red
+                    ForeColor = Color.Red,
+                    BackColor = Color.White,
+                    BorderStyle = BorderStyle.FixedSingle
                 };
                 analyticsTab.Controls.Add(errorLabel);
 
@@ -254,6 +307,7 @@ namespace UniversityGradesSystem.Forms
             {
                 TabPage gradeTab = new TabPage("✏️ Выставить оценки");
                 gradeTab.BackColor = Color.FromArgb(250, 250, 250);
+                gradeTab.UseVisualStyleBackColor = true;
 
                 // Создаем форму выставления оценок
                 GradeEntryForm gradeForm = new GradeEntryForm(userId);
@@ -285,111 +339,120 @@ namespace UniversityGradesSystem.Forms
 
         private void AddAdminTabs()
         {
-            // === Вкладка добавления студента ===
-            TabPage addStudentTab = new TabPage("➕ Добавить студента");
-            addStudentTab.BackColor = Color.FromArgb(250, 250, 250);
-            addStudentTab.Padding = new Padding(20);
+            // === Вкладка управления ===
+            TabPage managementTab = new TabPage("⚙️ Управление");
+            managementTab.BackColor = Color.FromArgb(250, 250, 250);
+            managementTab.UseVisualStyleBackColor = true;
 
-            Panel studentPanel = new Panel
+            // Используем FlowLayoutPanel для автоматического размещения карточек
+            FlowLayoutPanel flowPanel = new FlowLayoutPanel
             {
-                Size = new Size(400, 200),
-                Location = new Point(50, 50),
-                BackColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = true,
+                Padding = new Padding(20),
+                AutoScroll = true
             };
 
-            Label studentTitle = new Label
-            {
-                Text = "Добавление нового студента",
-                Font = new Font("Segoe UI", 14F, FontStyle.Bold),
-                Location = new Point(20, 20),
-                Size = new Size(360, 30),
-                ForeColor = Color.FromArgb(52, 73, 94)
-            };
-
-            Button btnAddStudent = new Button
-            {
-                Text = "📝 Добавить студента",
-                Location = new Point(20, 70),
-                Size = new Size(200, 40),
-                BackColor = Color.FromArgb(46, 204, 113),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                Cursor = Cursors.Hand
-            };
-            btnAddStudent.FlatAppearance.BorderSize = 0;
-            btnAddStudent.Click += (sender, e) =>
-            {
-                try
+            // Карточка добавления студента
+            Panel studentCard = CreateManagementCard(
+                "📝 Добавить студента",
+                "Добавление нового студента в систему",
+                Color.FromArgb(46, 204, 113),
+                (sender, e) =>
                 {
-                    AddStudentForm form = new AddStudentForm(userId);
-                    if (form.ShowDialog() == DialogResult.OK)
+                    try
                     {
-                        LoadStudents(); // Обновляем список после добавления
+                        AddStudentForm form = new AddStudentForm(userId);
+                        if (form.ShowDialog() == DialogResult.OK)
+                        {
+                            LoadStudents(); // Обновляем список после добавления
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Ошибка открытия формы добавления студента: {ex.Message}", "Ошибка",
+                            MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
-                catch (Exception ex)
+            );
+
+            // Карточка добавления группы
+            Panel groupCard = CreateManagementCard(
+                "👥 Добавить группу",
+                "Создание новой учебной группы",
+                Color.FromArgb(52, 152, 219),
+                (sender, e) =>
                 {
-                    MessageBox.Show($"Ошибка открытия формы добавления студента: {ex.Message}", "Ошибка",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    try
+                    {
+                        new AddGroupForm(userId).ShowDialog();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Ошибка открытия формы добавления группы: {ex.Message}", "Ошибка",
+                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
-            };
+            );
 
-            studentPanel.Controls.AddRange(new Control[] { studentTitle, btnAddStudent });
-            addStudentTab.Controls.Add(studentPanel);
-            tabControl.TabPages.Add(addStudentTab);
+            flowPanel.Controls.AddRange(new Control[] { studentCard, groupCard });
+            managementTab.Controls.Add(flowPanel);
+            tabControl.TabPages.Add(managementTab);
+        }
 
-            // === Вкладка добавления группы ===
-            TabPage addGroupTab = new TabPage("➕ Добавить группу");
-            addGroupTab.BackColor = Color.FromArgb(250, 250, 250);
-            addGroupTab.Padding = new Padding(20);
-
-            Panel groupPanel = new Panel
+        private Panel CreateManagementCard(string title, string description, Color color, EventHandler clickHandler)
+        {
+            Panel card = new Panel
             {
-                Size = new Size(400, 200),
-                Location = new Point(50, 50),
+                Size = new Size(300, 150),
                 BackColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle
-            };
-
-            Label groupTitle = new Label
-            {
-                Text = "Добавление новой группы",
-                Font = new Font("Segoe UI", 14F, FontStyle.Bold),
-                Location = new Point(20, 20),
-                Size = new Size(360, 30),
-                ForeColor = Color.FromArgb(52, 73, 94)
-            };
-
-            Button btnAddGroup = new Button
-            {
-                Text = "👥 Добавить группу",
-                Location = new Point(20, 70),
-                Size = new Size(200, 40),
-                BackColor = Color.FromArgb(52, 152, 219),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                BorderStyle = BorderStyle.FixedSingle,
+                Margin = new Padding(10),
                 Cursor = Cursors.Hand
             };
-            btnAddGroup.FlatAppearance.BorderSize = 0;
-            btnAddGroup.Click += (sender, e) =>
+
+            Panel colorBar = new Panel
             {
-                try
-                {
-                    new AddGroupForm(userId).ShowDialog();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Ошибка открытия формы добавления группы: {ex.Message}", "Ошибка",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                Size = new Size(5, 150),
+                BackColor = color,
+                Dock = DockStyle.Left
             };
 
-            groupPanel.Controls.AddRange(new Control[] { groupTitle, btnAddGroup });
-            addGroupTab.Controls.Add(groupPanel);
-            tabControl.TabPages.Add(addGroupTab);
+            Label titleLabel = new Label
+            {
+                Text = title,
+                Location = new Point(20, 20),
+                Size = new Size(270, 30),
+                Font = new Font("Segoe UI", 12F, FontStyle.Bold),
+                ForeColor = color
+            };
+
+            Label descLabel = new Label
+            {
+                Text = description,
+                Location = new Point(20, 55),
+                Size = new Size(270, 40),
+                Font = new Font("Segoe UI", 9F),
+                ForeColor = Color.FromArgb(127, 140, 141)
+            };
+
+            Button actionButton = new Button
+            {
+                Text = "Открыть",
+                Location = new Point(20, 105),
+                Size = new Size(100, 30),
+                BackColor = color,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                Cursor = Cursors.Hand
+            };
+            actionButton.FlatAppearance.BorderSize = 0;
+            actionButton.Click += clickHandler;
+
+            card.Controls.AddRange(new Control[] { colorBar, titleLabel, descLabel, actionButton });
+            return card;
         }
 
         private void LoadStudents()

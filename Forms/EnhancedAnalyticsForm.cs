@@ -20,6 +20,7 @@ namespace UniversityGradesSystem.Forms
         private int? teacherId;
 
         // UI элементы
+        private TableLayoutPanel mainLayout;
         private Panel headerPanel;
         private ComboBox cmbGroup;
         private ComboBox cmbDiscipline;
@@ -76,10 +77,19 @@ namespace UniversityGradesSystem.Forms
 
             // === Настройки формы ===
             this.Text = "Аналитика успеваемости";
-            this.Size = new Size(1200, 800);
-            this.MinimumSize = new Size(1000, 600);
-            this.StartPosition = FormStartPosition.CenterScreen;
             this.BackColor = Color.FromArgb(240, 244, 247);
+            this.MinimumSize = new Size(1000, 600);
+
+            // === Главный контейнер ===
+            mainLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 2,
+                Padding = new Padding(0)
+            };
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 100F)); // Заголовок
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F)); // Содержимое
 
             // === Заголовочная панель ===
             CreateHeaderPanel();
@@ -87,7 +97,13 @@ namespace UniversityGradesSystem.Forms
             // === Основной TabControl ===
             CreateTabControl();
 
-            // === Финальная настройка ===
+            // Добавляем элементы в главный контейнер
+            mainLayout.Controls.Add(headerPanel, 0, 0);
+            mainLayout.Controls.Add(tabControl, 0, 1);
+
+            // Добавляем главный контейнер на форму
+            this.Controls.Add(mainLayout);
+
             this.ResumeLayout(false);
         }
 
@@ -95,11 +111,21 @@ namespace UniversityGradesSystem.Forms
         {
             headerPanel = new Panel
             {
-                Height = 80,
-                Dock = DockStyle.Top,
+                Dock = DockStyle.Fill,
                 BackColor = Color.FromArgb(52, 73, 94),
                 Padding = new Padding(20, 10, 20, 10)
             };
+
+            // Используем TableLayoutPanel для заголовка
+            TableLayoutPanel headerLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 2,
+                BackColor = Color.Transparent
+            };
+            headerLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            headerLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
 
             // Заголовок
             var titleLabel = new Label
@@ -107,35 +133,45 @@ namespace UniversityGradesSystem.Forms
                 Text = "📊 Аналитика успеваемости",
                 Font = new Font("Segoe UI", 16F, FontStyle.Bold),
                 ForeColor = Color.White,
-                Location = new Point(20, 15),
-                AutoSize = true
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft
             };
 
             // Панель фильтров
-            var filtersPanel = new Panel
+            var filtersPanel = new TableLayoutPanel
             {
-                Height = 40,
-                Dock = DockStyle.Bottom,
+                Dock = DockStyle.Fill,
+                ColumnCount = 6,
+                RowCount = 1,
                 BackColor = Color.Transparent
             };
+
+            // Настраиваем колонки фильтров
+            filtersPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); // Лейбл группы
+            filtersPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150F)); // Комбобокс группы
+            filtersPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); // Лейбл дисциплины
+            filtersPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 180F)); // Комбобокс дисциплины
+            filtersPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100F)); // Кнопка обновления
+            filtersPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F)); // Остальное пространство
 
             // Группа
             var lblGroup = new Label
             {
                 Text = "Группа:",
-                Location = new Point(20, 10),
-                Size = new Size(60, 20),
+                Dock = DockStyle.Fill,
                 ForeColor = Color.White,
-                Font = new Font("Segoe UI", 9F)
+                Font = new Font("Segoe UI", 9F),
+                TextAlign = ContentAlignment.MiddleLeft,
+                Margin = new Padding(0, 0, 10, 0)
             };
 
             cmbGroup = new ComboBox
             {
-                Location = new Point(90, 8),
-                Size = new Size(150, 25),
+                Dock = DockStyle.Fill,
                 DropDownStyle = ComboBoxStyle.DropDownList,
                 BackColor = Color.White,
-                Font = new Font("Segoe UI", 9F)
+                Font = new Font("Segoe UI", 9F),
+                Margin = new Padding(0, 5, 15, 5)
             };
             cmbGroup.SelectedIndexChanged += CmbGroup_SelectedIndexChanged;
 
@@ -143,21 +179,22 @@ namespace UniversityGradesSystem.Forms
             var lblDiscipline = new Label
             {
                 Text = "Дисциплина:",
-                Location = new Point(260, 10),
-                Size = new Size(80, 20),
+                Dock = DockStyle.Fill,
                 ForeColor = Color.White,
                 Font = new Font("Segoe UI", 9F),
-                Visible = userRole == "teacher"
+                TextAlign = ContentAlignment.MiddleLeft,
+                Visible = userRole == "teacher",
+                Margin = new Padding(0, 0, 10, 0)
             };
 
             cmbDiscipline = new ComboBox
             {
-                Location = new Point(350, 8),
-                Size = new Size(180, 25),
+                Dock = DockStyle.Fill,
                 DropDownStyle = ComboBoxStyle.DropDownList,
                 BackColor = Color.White,
                 Font = new Font("Segoe UI", 9F),
-                Visible = userRole == "teacher"
+                Visible = userRole == "teacher",
+                Margin = new Padding(0, 5, 15, 5)
             };
             cmbDiscipline.SelectedIndexChanged += CmbDiscipline_SelectedIndexChanged;
 
@@ -165,23 +202,29 @@ namespace UniversityGradesSystem.Forms
             btnRefresh = new Button
             {
                 Text = "🔄 Обновить",
-                Location = new Point(userRole == "teacher" ? 550 : 260, 8),
-                Size = new Size(100, 25),
+                Dock = DockStyle.Fill,
                 BackColor = Color.FromArgb(46, 204, 113),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                Cursor = Cursors.Hand
+                Cursor = Cursors.Hand,
+                Margin = new Padding(0, 5, 0, 5)
             };
             btnRefresh.FlatAppearance.BorderSize = 0;
             btnRefresh.Click += BtnRefresh_Click;
 
-            filtersPanel.Controls.AddRange(new Control[] {
-                lblGroup, cmbGroup, lblDiscipline, cmbDiscipline, btnRefresh
-            });
+            // Добавляем элементы фильтров
+            filtersPanel.Controls.Add(lblGroup, 0, 0);
+            filtersPanel.Controls.Add(cmbGroup, 1, 0);
+            filtersPanel.Controls.Add(lblDiscipline, 2, 0);
+            filtersPanel.Controls.Add(cmbDiscipline, 3, 0);
+            filtersPanel.Controls.Add(btnRefresh, 4, 0);
 
-            headerPanel.Controls.AddRange(new Control[] { titleLabel, filtersPanel });
-            this.Controls.Add(headerPanel);
+            // Добавляем в заголовок
+            headerLayout.Controls.Add(titleLabel, 0, 0);
+            headerLayout.Controls.Add(filtersPanel, 0, 1);
+
+            headerPanel.Controls.Add(headerLayout);
         }
 
         private void CreateTabControl()
@@ -198,7 +241,7 @@ namespace UniversityGradesSystem.Forms
             overviewTab = new TabPage("📈 Обзор")
             {
                 BackColor = Color.FromArgb(240, 244, 247),
-                Padding = new Padding(15)
+                UseVisualStyleBackColor = true
             };
             CreateOverviewTab();
 
@@ -206,7 +249,7 @@ namespace UniversityGradesSystem.Forms
             detailsTab = new TabPage("📋 Детали")
             {
                 BackColor = Color.FromArgb(240, 244, 247),
-                Padding = new Padding(15)
+                UseVisualStyleBackColor = true
             };
             CreateDetailsTab();
 
@@ -214,60 +257,84 @@ namespace UniversityGradesSystem.Forms
             topStudentsTab = new TabPage("🏆 Лучшие студенты")
             {
                 BackColor = Color.FromArgb(240, 244, 247),
-                Padding = new Padding(15)
+                UseVisualStyleBackColor = true
             };
             CreateTopStudentsTab();
 
             tabControl.TabPages.AddRange(new TabPage[] { overviewTab, detailsTab, topStudentsTab });
-            this.Controls.Add(tabControl);
         }
 
         private void CreateOverviewTab()
         {
-            // Панель статистики сверху
-            statsPanel = new Panel
+            // Используем TableLayoutPanel для обзорной вкладки
+            TableLayoutPanel overviewLayout = new TableLayoutPanel
             {
-                Height = 120,
-                Dock = DockStyle.Top,
-                BackColor = Color.Transparent,
-                Padding = new Padding(0, 0, 0, 15)
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 2,
+                Padding = new Padding(15)
             };
+            overviewLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 140F)); // Статистика
+            overviewLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F)); // Графики
 
-            // Панель графиков
-            var chartsPanel = new Panel
+            // Панель статистики
+            statsPanel = new Panel
             {
                 Dock = DockStyle.Fill,
                 BackColor = Color.Transparent
             };
 
+            // Панель графиков
+            TableLayoutPanel chartsLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                RowCount = 1,
+                BackColor = Color.Transparent,
+                Padding = new Padding(0, 15, 0, 0)
+            };
+            chartsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            chartsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+
             // График успеваемости (круговой)
             performanceChart = new Chart
             {
-                Width = 400,
-                Height = 350,
-                Location = new Point(15, 15),
+                Dock = DockStyle.Fill,
                 BackColor = Color.White,
                 BorderlineColor = Color.LightGray,
-                BorderlineWidth = 1
+                BorderlineWidth = 1,
+                Margin = new Padding(0, 0, 7, 0)
             };
 
             // График распределения оценок (столбчатый)
             gradesDistributionChart = new Chart
             {
-                Width = 400,
-                Height = 350,
-                Location = new Point(430, 15),
+                Dock = DockStyle.Fill,
                 BackColor = Color.White,
                 BorderlineColor = Color.LightGray,
-                BorderlineWidth = 1
+                BorderlineWidth = 1,
+                Margin = new Padding(8, 0, 0, 0)
             };
 
-            chartsPanel.Controls.AddRange(new Control[] { performanceChart, gradesDistributionChart });
-            overviewTab.Controls.AddRange(new Control[] { statsPanel, chartsPanel });
+            chartsLayout.Controls.Add(performanceChart, 0, 0);
+            chartsLayout.Controls.Add(gradesDistributionChart, 1, 0);
+
+            overviewLayout.Controls.Add(statsPanel, 0, 0);
+            overviewLayout.Controls.Add(chartsLayout, 0, 1);
+
+            overviewTab.Controls.Add(overviewLayout);
         }
 
         private void CreateDetailsTab()
         {
+            TableLayoutPanel detailsLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 1,
+                Padding = new Padding(15)
+            };
+
             groupDetailsGrid = new DataGridView
             {
                 Dock = DockStyle.Fill,
@@ -276,23 +343,34 @@ namespace UniversityGradesSystem.Forms
                 AllowUserToDeleteRows = false,
                 ReadOnly = true,
                 BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.None,
+                BorderStyle = BorderStyle.Fixed3D,
                 ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
                 Font = new Font("Segoe UI", 9F),
                 GridColor = Color.FromArgb(224, 224, 224),
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                RowHeadersVisible = false
             };
 
             // Стилизация заголовков
             groupDetailsGrid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(52, 73, 94);
             groupDetailsGrid.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
             groupDetailsGrid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            groupDetailsGrid.ColumnHeadersHeight = 35;
 
-            detailsTab.Controls.Add(groupDetailsGrid);
+            detailsLayout.Controls.Add(groupDetailsGrid, 0, 0);
+            detailsTab.Controls.Add(detailsLayout);
         }
 
         private void CreateTopStudentsTab()
         {
+            TableLayoutPanel topStudentsLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 1,
+                Padding = new Padding(15)
+            };
+
             topStudentsGrid = new DataGridView
             {
                 Dock = DockStyle.Fill,
@@ -301,11 +379,12 @@ namespace UniversityGradesSystem.Forms
                 AllowUserToDeleteRows = false,
                 ReadOnly = true,
                 BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.None,
+                BorderStyle = BorderStyle.Fixed3D,
                 ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
                 Font = new Font("Segoe UI", 9F),
                 GridColor = Color.FromArgb(224, 224, 224),
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                RowHeadersVisible = false
             };
 
             // Колонки для топ студентов
@@ -321,8 +400,10 @@ namespace UniversityGradesSystem.Forms
             topStudentsGrid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(52, 73, 94);
             topStudentsGrid.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
             topStudentsGrid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            topStudentsGrid.ColumnHeadersHeight = 35;
 
-            topStudentsTab.Controls.Add(topStudentsGrid);
+            topStudentsLayout.Controls.Add(topStudentsGrid, 0, 0);
+            topStudentsTab.Controls.Add(topStudentsLayout);
         }
 
         private void InitializeCharts()
@@ -535,9 +616,10 @@ namespace UniversityGradesSystem.Forms
             return new GroupAnalytics
             {
                 TotalStudents = groupsSummary.Sum(g => g.TotalStudents),
-                AverageGrade = groupsSummary.Where(g => g.AverageGrade > 0).Average(g => g.AverageGrade),
-                ExcellentPercentage = groupsSummary.Where(g => g.TotalStudents > 0)
-                    .Average(g => g.ExcellentPercentage)
+                AverageGrade = groupsSummary.Where(g => g.AverageGrade > 0).Any() ?
+                    groupsSummary.Where(g => g.AverageGrade > 0).Average(g => g.AverageGrade) : 0,
+                ExcellentPercentage = groupsSummary.Where(g => g.TotalStudents > 0).Any() ?
+                    groupsSummary.Where(g => g.TotalStudents > 0).Average(g => g.ExcellentPercentage) : 0
                 // Для общей статистики используем средние значения
             };
         }
@@ -545,6 +627,15 @@ namespace UniversityGradesSystem.Forms
         private void UpdateStatsPanel(GroupAnalytics analytics)
         {
             statsPanel.Controls.Clear();
+
+            // Используем FlowLayoutPanel для автоматического размещения карточек
+            FlowLayoutPanel cardFlow = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = true,
+                Padding = new Padding(0)
+            };
 
             var cards = new[]
             {
@@ -554,25 +645,27 @@ namespace UniversityGradesSystem.Forms
                 CreateStatCard("⚠️ Неуспевающие", $"{analytics.FailingCount} ({analytics.FailingPercentage:F1}%)", Color.FromArgb(231, 76, 60))
             };
 
-            for (int i = 0; i < cards.Length; i++)
+            foreach (var card in cards)
             {
-                cards[i].Location = new Point(i * 200 + 15, 15);
-                statsPanel.Controls.Add(cards[i]);
+                cardFlow.Controls.Add(card);
             }
+
+            statsPanel.Controls.Add(cardFlow);
         }
 
         private Panel CreateStatCard(string title, string value, Color color)
         {
             var card = new Panel
             {
-                Size = new Size(180, 90),
+                Size = new Size(200, 100),
                 BackColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle
+                BorderStyle = BorderStyle.FixedSingle,
+                Margin = new Padding(5)
             };
 
             var colorBar = new Panel
             {
-                Size = new Size(4, 90),
+                Size = new Size(4, 100),
                 BackColor = color,
                 Dock = DockStyle.Left
             };
@@ -581,7 +674,7 @@ namespace UniversityGradesSystem.Forms
             {
                 Text = title,
                 Location = new Point(15, 15),
-                Size = new Size(160, 20),
+                Size = new Size(180, 20),
                 Font = new Font("Segoe UI", 9F),
                 ForeColor = Color.FromArgb(127, 140, 141)
             };
@@ -590,8 +683,8 @@ namespace UniversityGradesSystem.Forms
             {
                 Text = value,
                 Location = new Point(15, 40),
-                Size = new Size(160, 30),
-                Font = new Font("Segoe UI", 14F, FontStyle.Bold),
+                Size = new Size(180, 40),
+                Font = new Font("Segoe UI", 12F, FontStyle.Bold),
                 ForeColor = color
             };
 
