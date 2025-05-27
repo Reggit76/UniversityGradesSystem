@@ -139,6 +139,12 @@
     <Compile Include="Forms\AddStudentForm.Designer.cs">
       <DependentUpon>AddStudentForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\EnhancedAnalyticsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\EnhancedAnalyticsForm.Designer.cs">
+      <DependentUpon>EnhancedAnalyticsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\GradeEntryForm.cs">
       <SubType>Form</SubType>
     </Compile>
