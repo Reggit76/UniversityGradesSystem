@@ -1,39 +1,29 @@
-﻿using MaterialSkin.Controls;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 using System.Drawing;
 
 namespace UniversityGradesSystem.Forms
 {
-    partial class GradeEntryForm : MaterialForm
+    partial class GradeEntryForm : Form
     {
         private void InitializeComponent()
         {
             this.SuspendLayout();
 
-            // === Панель верхних элементов управления ===
-            var topPanel = new Panel
-            {
-                Height = 80,
-                Dock = DockStyle.Top,
-                Padding = new Padding(10),
-                BackColor = Color.FromArgb(250, 250, 250)
-            };
-
             // === Лейбл для группы ===
             var lblGroup = new Label
             {
                 Text = "Группа:",
-                Location = new Point(10, 15),
+                Location = new Point(20, 20),
                 Size = new Size(80, 23),
-                Font = new Font("Microsoft Sans Serif", 10F, FontStyle.Regular),
-                ForeColor = Color.FromArgb(60, 60, 60)
+                Font = new Font("Microsoft Sans Serif", 10F)
             };
 
             // === Комбобокс групп ===
-            this.cmbGroup = new MaterialComboBox
+            this.cmbGroup = new ComboBox
             {
-                Location = new Point(100, 10),
-                Size = new Size(200, 30)
+                Location = new Point(110, 17),
+                Size = new Size(200, 30),
+                DropDownStyle = ComboBoxStyle.DropDownList
             };
             this.cmbGroup.SelectedIndexChanged += CmbGroup_SelectedIndexChanged;
 
@@ -41,106 +31,81 @@ namespace UniversityGradesSystem.Forms
             var lblDiscipline = new Label
             {
                 Text = "Дисциплина:",
-                Location = new Point(320, 15),
+                Location = new Point(330, 20),
                 Size = new Size(90, 23),
-                Font = new Font("Microsoft Sans Serif", 10F, FontStyle.Regular),
-                ForeColor = Color.FromArgb(60, 60, 60)
+                Font = new Font("Microsoft Sans Serif", 10F)
             };
 
             // === Комбобокс дисциплин ===
-            this.cmbDiscipline = new MaterialComboBox
+            this.cmbDiscipline = new ComboBox
             {
-                Location = new Point(420, 10),
-                Size = new Size(250, 30)
+                Location = new Point(430, 17),
+                Size = new Size(250, 30),
+                DropDownStyle = ComboBoxStyle.DropDownList
             };
             this.cmbDiscipline.SelectedIndexChanged += CmbDiscipline_SelectedIndexChanged;
 
-            // === Кнопка загрузки студентов ===
-            var btnLoad = new MaterialButton
+            // === Кнопка обновления ===
+            var btnRefresh = new Button
             {
-                Text = "ОБНОВИТЬ",
-                Location = new Point(690, 10),
-                Size = new Size(100, 35),
-                UseAccentColor = true
+                Text = "Обновить",
+                Location = new Point(700, 17),
+                Size = new Size(80, 30),
+                BackColor = Color.LightBlue
             };
-            btnLoad.Click += (sender, e) => LoadStudents();
-
-            // Добавляем элементы в верхнюю панель
-            topPanel.Controls.AddRange(new Control[] {
-                lblGroup, this.cmbGroup, lblDiscipline, this.cmbDiscipline, btnLoad
-            });
-
-            // === Панель для DataGridView ===
-            var gridPanel = new Panel
-            {
-                Dock = DockStyle.Fill,
-                Padding = new Padding(10)
-            };
+            btnRefresh.Click += (sender, e) => LoadStudents();
 
             // === Таблица студентов ===
             this.dgvStudents = new DataGridView
             {
-                Dock = DockStyle.Fill,
+                Location = new Point(20, 70),
+                Size = new Size(760, 350),
                 AutoGenerateColumns = false,
                 AllowUserToAddRows = false,
                 AllowUserToDeleteRows = false,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                SelectionMode = DataGridViewSelectionMode.CellSelect,
                 BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.None,
-                CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal,
-                ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None,
-                ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing,
-                ColumnHeadersHeight = 40,
-                RowTemplate = { Height = 35 }
-            };
-
-            gridPanel.Controls.Add(this.dgvStudents);
-
-            // === Панель для кнопки сохранения ===
-            var bottomPanel = new Panel
-            {
-                Height = 60,
-                Dock = DockStyle.Bottom,
-                Padding = new Padding(10),
-                BackColor = Color.FromArgb(250, 250, 250)
-            };
-
-            // === Информационная метка ===
-            var infoLabel = new Label
-            {
-                Text = "Выберите группу и дисциплину, затем выставьте оценки студентам",
-                Location = new Point(10, 15),
-                Size = new Size(400, 23),
-                Font = new Font("Microsoft Sans Serif", 9F, FontStyle.Italic),
-                ForeColor = Color.FromArgb(100, 100, 100)
+                BorderStyle = BorderStyle.Fixed3D
             };
 
             // === Кнопка сохранения ===
-            this.btnSave = new MaterialButton
+            this.btnSave = new Button
             {
-                Text = "СОХРАНИТЬ ОЦЕНКИ",
-                Location = new Point(650, 10),
-                Size = new Size(150, 40),
-                BackColor = Color.FromArgb(0, 122, 204),
-                ForeColor = Color.White,
-                UseAccentColor = false
+                Text = "Сохранить оценки",
+                Location = new Point(20, 440),
+                Size = new Size(150, 35),
+                BackColor = Color.LightGreen,
+                Font = new Font("Microsoft Sans Serif", 10F, FontStyle.Bold)
             };
             this.btnSave.Click += BtnSave_Click;
 
-            bottomPanel.Controls.AddRange(new Control[] { infoLabel, this.btnSave });
+            // === Информационная метка ===
+            var lblInfo = new Label
+            {
+                Text = "Выберите группу и дисциплину, затем выставьте оценки студентам",
+                Location = new Point(190, 450),
+                Size = new Size(400, 20),
+                ForeColor = Color.Gray,
+                Font = new Font("Microsoft Sans Serif", 9F, FontStyle.Italic)
+            };
 
-            // === Добавление панелей на форму ===
+            // === Добавление всех элементов на форму ===
             this.Controls.AddRange(new Control[] {
-                topPanel,
-                gridPanel,
-                bottomPanel
+                lblGroup, this.cmbGroup,
+                lblDiscipline, this.cmbDiscipline,
+                btnRefresh, this.dgvStudents,
+                this.btnSave, lblInfo
             });
 
             // === Настройки формы ===
-            this.Size = new Size(900, 600);
-            this.MinimumSize = new Size(800, 500);
             this.Text = "Выставление оценок";
+            this.Size = new Size(820, 520);
+            this.MinimumSize = new Size(820, 520);
+            this.MaximumSize = new Size(820, 520);
             this.StartPosition = FormStartPosition.CenterParent;
+            this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.BackColor = Color.WhiteSmoke;
 
             this.ResumeLayout(false);
         }

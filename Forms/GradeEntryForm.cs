@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using UniversityGradesSystem.Models;
 using UniversityGradesSystem.Services;
-using MaterialSkin;
-using MaterialSkin.Controls;
 using System.Drawing;
 
 namespace UniversityGradesSystem.Forms
 {
-    public partial class GradeEntryForm : MaterialForm
+    public partial class GradeEntryForm : Form
     {
         private readonly GradeService gradeService;
         private readonly DisciplineService disciplineService;
@@ -19,154 +17,106 @@ namespace UniversityGradesSystem.Forms
         private readonly int userId;
         private int? teacherId;
 
-        // Используем Material-компоненты
-        private MaterialComboBox cmbGroup;
-        private MaterialComboBox cmbDiscipline;
+        // Простые элементы интерфейса
+        private ComboBox cmbGroup;
+        private ComboBox cmbDiscipline;
         private DataGridView dgvStudents;
-        private MaterialButton btnSave;
+        private Button btnSave;
 
         public GradeEntryForm(int userId)
-{
-    this.userId = userId;
-    
-    try
-    {
-        string connString = DatabaseManager.Instance.GetConnectionString();
-
-        // Инициализация сервисов
-        gradeService = new GradeService(connString);
-        disciplineService = new DisciplineService(connString);
-        studentService = new StudentService(connString);
-        teacherService = new TeacherService(connString);
-        groupService = new GroupService(connString);
-
-        // Получение teacherId
-        teacherId = teacherService.GetTeacherId(userId);
-        if (!teacherId.HasValue)
         {
-            MessageBox.Show("Преподаватель не найден. Обратитесь к администратору.");
-            // НЕ закрываем форму, просто показываем сообщение
-            return;
-        }
+            this.userId = userId;
 
-        InitializeComponent(); // Вызов метода инициализации из Designer.cs
-        ApplyMaterialSkin();
-        InitializeDataGridView(); // Инициализируем DataGridView после создания компонентов
-        
-        // Загружаем данные после инициализации компонентов
-        LoadGroups();
-        LoadDisciplines();
-        
-        DatabaseManager.Instance.LogAction(userId, "FORM_OPENED", "Открыта форма выставления оценок");
-    }
-    catch (Exception ex)
-    {
-        MessageBox.Show($"Ошибка инициализации формы выставления оценок: {ex.Message}");
-        DatabaseManager.Instance.LogAction(userId, "ERROR", $"Ошибка инициализации GradeEntryForm: {ex.Message}");
-        
-        // Даже при ошибке пытаемся создать минимальный интерфейс
-        try
-        {
-            InitializeComponent();
-        }
-        catch
-        {
-            // Если даже базовая инициализация не работает, создаем простую форму
-            this.Size = new System.Drawing.Size(800, 600);
-            this.Text = "Выставление оценок (ошибка загрузки)";
-            var errorLabel = new Label 
-            { 
-                Text = "Ошибка загрузки данных. Проверьте подключение к базе данных.",
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleCenter
-            };
-            this.Controls.Add(errorLabel);
-        }
-    }
-}
+            try
+            {
+                string connString = DatabaseManager.Instance.GetConnectionString();
 
-        private void ApplyMaterialSkin()
-        {
-            var materialSkinManager = MaterialSkinManager.Instance;
-            materialSkinManager.AddFormToManage(this);
-            materialSkinManager.Theme = MaterialSkinManager.Themes.LIGHT;
-            materialSkinManager.ColorScheme = new MaterialSkin.ColorScheme(
-                MaterialSkin.Primary.BlueGrey800,
-                MaterialSkin.Primary.BlueGrey900,
-                MaterialSkin.Primary.BlueGrey500,
-                MaterialSkin.Accent.LightBlue200,
-                MaterialSkin.TextShade.WHITE);
+                // Инициализация сервисов
+                gradeService = new GradeService(connString);
+                disciplineService = new DisciplineService(connString);
+                studentService = new StudentService(connString);
+                teacherService = new TeacherService(connString);
+                groupService = new GroupService(connString);
+
+                // Получение teacherId
+                teacherId = teacherService.GetTeacherId(userId);
+                if (!teacherId.HasValue)
+                {
+                    MessageBox.Show("Преподаватель не найден. Обратитесь к администратору.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    InitializeComponent(); // Всё равно создаем интерфейс
+                    return;
+                }
+
+                InitializeComponent();
+                InitializeDataGridView();
+
+                // Загружаем данные
+                LoadGroups();
+                LoadDisciplines();
+
+                DatabaseManager.Instance.LogAction(userId, "FORM_OPENED", "Открыта форма выставления оценок");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка инициализации формы: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                // Создаем базовый интерфейс даже при ошибке
+                try
+                {
+                    InitializeComponent();
+                }
+                catch
+                {
+                    this.Size = new Size(800, 600);
+                    this.Text = "Выставление оценок (ошибка)";
+                }
+            }
         }
 
         private void InitializeDataGridView()
         {
             dgvStudents.Columns.Clear();
-            dgvStudents.AllowUserToAddRows = false;
-            dgvStudents.AllowUserToDeleteRows = false;
-            dgvStudents.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dgvStudents.MultiSelect = false;
-            dgvStudents.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
 
-            // Колонка ID (скрытая)
-            var idColumn = new DataGridViewTextBoxColumn
+            // ID колонка (скрытая)
+            dgvStudents.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "Id",
                 HeaderText = "ID",
                 ReadOnly = true,
                 Visible = false
-            };
-            dgvStudents.Columns.Add(idColumn);
+            });
 
-            // Колонка ФИО
-            var nameColumn = new DataGridViewTextBoxColumn
+            // ФИО колонка
+            dgvStudents.Columns.Add(new DataGridViewTextBoxColumn
             {
                 Name = "FullName",
                 HeaderText = "ФИО студента",
-                ReadOnly = true,
-                FillWeight = 70
-            };
-            dgvStudents.Columns.Add(nameColumn);
+                Width = 400,
+                ReadOnly = true
+            });
 
-            // Колонка оценки - ИСПРАВЛЕНИЕ: правильная настройка ComboBox
+            // Оценка колонка
             var gradeColumn = new DataGridViewComboBoxColumn
             {
                 Name = "Grade",
                 HeaderText = "Оценка",
-                FillWeight = 30,
-                DisplayStyle = DataGridViewComboBoxDisplayStyle.ComboBox,
-                ValueType = typeof(int?),
-                DisplayMember = "Text",
-                ValueMember = "Value"
+                Width = 100
             };
 
-            // Создаем список значений для ComboBox
-            var gradeItems = new List<object>
-            {
-                new { Text = "Не выбрано", Value = (int?)null },
-                new { Text = "2", Value = (int?)2 },
-                new { Text = "3", Value = (int?)3 },
-                new { Text = "4", Value = (int?)4 },
-                new { Text = "5", Value = (int?)5 }
-            };
-
-            gradeColumn.DataSource = gradeItems;
+            // Простой список оценок
+            gradeColumn.Items.AddRange(new object[] { "Не выбрано", "2", "3", "4", "5" });
             dgvStudents.Columns.Add(gradeColumn);
 
             // Настройка внешнего вида
             dgvStudents.RowHeadersVisible = false;
-            dgvStudents.BackgroundColor = System.Drawing.Color.White;
-            dgvStudents.BorderStyle = BorderStyle.Fixed3D;
-            dgvStudents.DefaultCellStyle.SelectionBackColor = System.Drawing.Color.LightBlue;
-            dgvStudents.DefaultCellStyle.SelectionForeColor = System.Drawing.Color.Black;
-            dgvStudents.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.LightGray;
-            dgvStudents.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold);
+            dgvStudents.AllowUserToAddRows = false;
+            dgvStudents.AllowUserToDeleteRows = false;
+            dgvStudents.SelectionMode = DataGridViewSelectionMode.CellSelect;
+            dgvStudents.MultiSelect = false;
 
-            // Обработчик ошибок DataGridView
-            dgvStudents.DataError += (sender, e) =>
-            {
-                // Подавляем ошибки валидации ComboBox
+            // Обработчик ошибок
+            dgvStudents.DataError += (sender, e) => {
                 e.ThrowException = false;
-                Console.WriteLine($"DataGridView error: {e.Exception?.Message}");
             };
         }
 
@@ -175,28 +125,22 @@ namespace UniversityGradesSystem.Forms
             try
             {
                 var groups = groupService.GetAllGroups();
-                Console.WriteLine($"Загружено групп: {groups?.Count ?? 0}");
 
                 if (groups != null && groups.Count > 0)
                 {
-                    cmbGroup.DataSource = groups;
                     cmbGroup.DisplayMember = "Name";
                     cmbGroup.ValueMember = "Id";
-                    cmbGroup.SelectedIndex = -1; // Снимаем выделение
-
-                    Console.WriteLine("Группы успешно загружены в ComboBox");
+                    cmbGroup.DataSource = groups;
+                    cmbGroup.SelectedIndex = -1;
                 }
                 else
                 {
-                    MessageBox.Show("Не найдено ни одной группы в базе данных");
-                    Console.WriteLine("Группы не найдены");
+                    MessageBox.Show("Группы не найдены в базе данных", "Информация", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка загрузки групп: {ex.Message}");
-                Console.WriteLine($"Ошибка загрузки групп: {ex.Message}");
-                DatabaseManager.Instance.LogAction(userId, "ERROR", $"Ошибка загрузки групп: {ex.Message}");
+                MessageBox.Show($"Ошибка загрузки групп: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -206,39 +150,27 @@ namespace UniversityGradesSystem.Forms
             {
                 if (!teacherId.HasValue)
                 {
-                    MessageBox.Show("ID преподавателя не определен");
+                    MessageBox.Show("ID преподавателя не определен", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
                 var disciplines = disciplineService.GetTeacherDisciplines(teacherId.Value);
-                Console.WriteLine($"Загружено дисциплин для преподавателя {teacherId.Value}: {disciplines?.Count ?? 0}");
 
                 if (disciplines != null && disciplines.Count > 0)
                 {
-                    cmbDiscipline.DataSource = disciplines;
                     cmbDiscipline.DisplayMember = "Name";
                     cmbDiscipline.ValueMember = "Id";
-                    cmbDiscipline.SelectedIndex = -1; // Снимаем выделение
-
-                    Console.WriteLine("Дисциплины успешно загружены в ComboBox");
-
-                    // Выводим список дисциплин для отладки
-                    foreach (var disc in disciplines)
-                    {
-                        Console.WriteLine($"Дисциплина: ID={disc.Id}, Name={disc.Name}");
-                    }
+                    cmbDiscipline.DataSource = disciplines;
+                    cmbDiscipline.SelectedIndex = -1;
                 }
                 else
                 {
-                    MessageBox.Show($"У преподавателя с ID {teacherId.Value} нет назначенных дисциплин");
-                    Console.WriteLine($"Дисциплины не найдены для преподавателя {teacherId.Value}");
+                    MessageBox.Show($"У преподавателя нет назначенных дисциплин", "Информация", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка загрузки дисциплин: {ex.Message}");
-                Console.WriteLine($"Ошибка загрузки дисциплин: {ex.Message}");
-                DatabaseManager.Instance.LogAction(userId, "ERROR", $"Ошибка загрузки дисциплин: {ex.Message}");
+                MessageBox.Show($"Ошибка загрузки дисциплин: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -250,16 +182,14 @@ namespace UniversityGradesSystem.Forms
                 {
                     var students = studentService.GetStudentsByGroup(selectedGroup.Id);
 
-                    // Очищаем DataGridView
                     dgvStudents.Rows.Clear();
 
                     if (students == null || students.Count == 0)
                     {
-                        MessageBox.Show("В выбранной группе нет студентов");
+                        MessageBox.Show("В выбранной группе нет студентов", "Информация", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return;
                     }
 
-                    // Добавляем студентов
                     foreach (var student in students)
                     {
                         int rowIndex = dgvStudents.Rows.Add();
@@ -268,24 +198,28 @@ namespace UniversityGradesSystem.Forms
                         row.Cells["Id"].Value = student.Id;
                         row.Cells["FullName"].Value = $"{student.LastName} {student.FirstName} {student.MiddleName}";
 
-                        // Загружаем существующую оценку, если есть
+                        // Загружаем существующую оценку
                         if (cmbDiscipline.SelectedItem is Discipline selectedDiscipline)
                         {
                             var existingGrade = gradeService.GetStudentGrade(student.Id, selectedDiscipline.Id);
-                            row.Cells["Grade"].Value = existingGrade; // Теперь передаем int? напрямую
+                            if (existingGrade.HasValue)
+                            {
+                                row.Cells["Grade"].Value = existingGrade.Value.ToString();
+                            }
+                            else
+                            {
+                                row.Cells["Grade"].Value = "Не выбрано";
+                            }
                         }
                         else
                         {
-                            row.Cells["Grade"].Value = null;
+                            row.Cells["Grade"].Value = "Не выбрано";
                         }
                     }
-
-                    Console.WriteLine($"Загружено студентов: {students.Count}");
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Ошибка загрузки студентов: {ex.Message}");
-                    Console.WriteLine($"Ошибка LoadStudents: {ex.Message}");
+                    MessageBox.Show($"Ошибка загрузки студентов: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             else
@@ -301,7 +235,6 @@ namespace UniversityGradesSystem.Forms
 
         private void CmbDiscipline_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // При смене дисциплины перезагружаем студентов с их оценками
             LoadStudents();
         }
 
@@ -309,64 +242,84 @@ namespace UniversityGradesSystem.Forms
         {
             try
             {
-                if (cmbDiscipline.SelectedItem is Discipline selectedDiscipline && cmbGroup.SelectedItem is Group selectedGroup)
+                if (!(cmbDiscipline.SelectedItem is Discipline selectedDiscipline) || !(cmbGroup.SelectedItem is Group selectedGroup))
                 {
-                    int savedCount = 0;
-                    int errorCount = 0;
+                    MessageBox.Show("Выберите группу и дисциплину", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
 
-                    foreach (DataGridViewRow row in dgvStudents.Rows)
+                Console.WriteLine($"Начинаем сохранение. Группа: {selectedGroup.Name}, Дисциплина: {selectedDiscipline.Name}");
+
+                int savedCount = 0;
+                int errorCount = 0;
+                int processedCount = 0;
+
+                foreach (DataGridViewRow row in dgvStudents.Rows)
+                {
+                    if (!row.IsNewRow && row.Cells["Grade"].Value != null && row.Cells["Id"].Value != null)
                     {
-                        if (!row.IsNewRow && row.Cells["Grade"].Value != null && row.Cells["Id"].Value != null)
-                        {
-                            // Проверяем, что оценка не равна null (не выбрано "Не выбрано")
-                            if (row.Cells["Grade"].Value is int gradeValue && gradeValue >= 2 && gradeValue <= 5)
-                            {
-                                int studentId = (int)row.Cells["Id"].Value;
-                                int disciplineId = selectedDiscipline.Id;
+                        string gradeText = row.Cells["Grade"].Value.ToString();
+                        Console.WriteLine($"Обрабатываем строку: ID={row.Cells["Id"].Value}, Grade={gradeText}");
 
-                                // Используем корректный метод сервиса
-                                if (gradeService.SaveGrade(studentId, disciplineId, gradeValue))
-                                {
-                                    savedCount++;
-                                }
-                                else
-                                {
-                                    errorCount++;
-                                }
+                        // Пропускаем "Не выбрано"
+                        if (gradeText == "Не выбрано")
+                        {
+                            Console.WriteLine("Пропускаем - не выбрано");
+                            continue;
+                        }
+
+                        if (int.TryParse(gradeText, out int grade) && grade >= 2 && grade <= 5)
+                        {
+                            processedCount++;
+                            int studentId = (int)row.Cells["Id"].Value;
+                            int disciplineId = selectedDiscipline.Id;
+
+                            Console.WriteLine($"Попытка сохранить: StudentId={studentId}, DisciplineId={disciplineId}, Grade={grade}");
+
+                            if (gradeService.SaveGrade(studentId, disciplineId, grade))
+                            {
+                                savedCount++;
+                                Console.WriteLine("Оценка успешно сохранена");
+                            }
+                            else
+                            {
+                                errorCount++;
+                                Console.WriteLine("Ошибка сохранения оценки");
                             }
                         }
-                    }
-
-                    if (savedCount > 0)
-                    {
-                        string message = $"Успешно сохранено оценок: {savedCount}";
-                        if (errorCount > 0)
+                        else
                         {
-                            message += $"\nОшибок при сохранении: {errorCount}";
+                            Console.WriteLine($"Неверное значение оценки: {gradeText}");
                         }
-                        MessageBox.Show(message, "Результат сохранения", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
 
-                        // Обновляем отображение после сохранения
-                        LoadStudents();
-                    }
-                    else if (errorCount > 0)
+                Console.WriteLine($"Результат: обработано={processedCount}, сохранено={savedCount}, ошибок={errorCount}");
+
+                // Показываем результат
+                if (savedCount > 0)
+                {
+                    string message = $"Успешно сохранено оценок: {savedCount}";
+                    if (errorCount > 0)
                     {
-                        MessageBox.Show($"Все оценки ({errorCount}) не удалось сохранить. Проверьте логи.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        message += $"\nОшибок при сохранении: {errorCount}";
                     }
-                    else
-                    {
-                        MessageBox.Show("Не было выставлено ни одной оценки", "Информация", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
+                    MessageBox.Show(message, "Результат", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    LoadStudents(); // Обновляем отображение
+                }
+                else if (errorCount > 0)
+                {
+                    MessageBox.Show($"Не удалось сохранить {errorCount} оценок. Проверьте консоль для деталей.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 else
                 {
-                    MessageBox.Show("Выберите группу и дисциплину", "Предупреждение", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show($"Не было выставлено ни одной оценки (обработано строк: {processedCount})", "Информация", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка сохранения оценок: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Console.WriteLine($"Ошибка BtnSave_Click: {ex.Message}");
+                Console.WriteLine($"Исключение в BtnSave_Click: {ex}");
             }
         }
     }
