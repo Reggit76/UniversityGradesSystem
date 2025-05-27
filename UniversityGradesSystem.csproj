@@ -127,17 +127,23 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Forms\AddGroupForm.cs">
+    <Compile Include="Forms\AddDisciplineForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\AddGroupForm.Designer.cs">
-      <DependentUpon>AddGroupForm.cs</DependentUpon>
+    <Compile Include="Forms\AddDisciplineForm.Designer.cs">
+      <DependentUpon>AddDisciplineForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\AddStudentForm.cs">
+    <Compile Include="Forms\EnhancedAddGroupForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\AddStudentForm.Designer.cs">
-      <DependentUpon>AddStudentForm.cs</DependentUpon>
+    <Compile Include="Forms\EnhancedAddGroupForm.Designer.cs">
+      <DependentUpon>EnhancedAddGroupForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\EnhancedAddStudentForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\EnhancedAddStudentForm.Designer.cs">
+      <DependentUpon>EnhancedAddStudentForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\EnhancedAnalyticsForm.cs">
       <SubType>Form</SubType>
@@ -145,11 +151,11 @@
     <Compile Include="Forms\EnhancedAnalyticsForm.Designer.cs">
       <DependentUpon>EnhancedAnalyticsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\GradeEntryForm.cs">
+    <Compile Include="Forms\EnhancedGradeEntryForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\GradeEntryForm.Designer.cs">
-      <DependentUpon>GradeEntryForm.cs</DependentUpon>
+    <Compile Include="Forms\EnhancedGradeEntryForm.Designer.cs">
+      <DependentUpon>EnhancedGradeEntryForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\LoginForm.cs">
       <SubType>Form</SubType>

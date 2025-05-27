@@ -54,8 +54,15 @@ namespace UniversityGradesSystem.Forms
             CreateMainTabControl();
 
             // === Базовые вкладки ===
-            CreateStudentsTab();
-            CreateDisciplinesTab();
+            if (role == "admin")
+            {
+                CreateStudentsTab();
+            }
+            else if (role == "teacher")
+            {
+                CreateDisciplinesTab();
+            }
+
             CreateEnhancedAnalyticsTab();
 
             this.ResumeLayout(false);
@@ -282,7 +289,6 @@ namespace UniversityGradesSystem.Forms
                 if (role == "teacher")
                 {
                     LoadTeacherDisciplines();
-                    HideTabPage("👥 Студенты");
                     AddGradeEntryTab();
                 }
                 else if (role == "admin")
@@ -309,8 +315,8 @@ namespace UniversityGradesSystem.Forms
                 gradeTab.BackColor = Color.FromArgb(250, 250, 250);
                 gradeTab.UseVisualStyleBackColor = true;
 
-                // Создаем форму выставления оценок
-                GradeEntryForm gradeForm = new GradeEntryForm(userId);
+                // Создаем улучшенную форму выставления оценок
+                EnhancedGradeEntryForm gradeForm = new EnhancedGradeEntryForm(userId);
 
                 // Настраиваем форму для встраивания
                 gradeForm.TopLevel = false;
@@ -363,7 +369,7 @@ namespace UniversityGradesSystem.Forms
                 {
                     try
                     {
-                        AddStudentForm form = new AddStudentForm(userId);
+                        EnhancedAddStudentForm form = new EnhancedAddStudentForm(userId);
                         if (form.ShowDialog() == DialogResult.OK)
                         {
                             LoadStudents(); // Обновляем список после добавления
@@ -386,7 +392,8 @@ namespace UniversityGradesSystem.Forms
                 {
                     try
                     {
-                        new AddGroupForm(userId).ShowDialog();
+                        EnhancedAddGroupForm form = new EnhancedAddGroupForm(userId);
+                        form.ShowDialog();
                     }
                     catch (Exception ex)
                     {
@@ -396,7 +403,27 @@ namespace UniversityGradesSystem.Forms
                 }
             );
 
-            flowPanel.Controls.AddRange(new Control[] { studentCard, groupCard });
+            // Карточка добавления дисциплины
+            Panel disciplineCard = CreateManagementCard(
+                "📚 Добавить дисциплину",
+                "Создание новой дисциплины",
+                Color.FromArgb(155, 89, 182),
+                (sender, e) =>
+                {
+                    try
+                    {
+                        AddDisciplineForm form = new AddDisciplineForm(userId);
+                        form.ShowDialog();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Ошибка открытия формы добавления дисциплины: {ex.Message}", "Ошибка",
+                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            );
+
+            flowPanel.Controls.AddRange(new Control[] { studentCard, groupCard, disciplineCard });
             managementTab.Controls.Add(flowPanel);
             tabControl.TabPages.Add(managementTab);
         }
@@ -526,19 +553,6 @@ namespace UniversityGradesSystem.Forms
                 MessageBox.Show($"Ошибка загрузки дисциплин: {ex.Message}", "Ошибка",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 DatabaseManager.Instance.LogAction(userId, "ERROR", $"Ошибка загрузки дисциплин: {ex.Message}");
-            }
-        }
-
-        private void HideTabPage(string tabName)
-        {
-            for (int i = tabControl.TabPages.Count - 1; i >= 0; i--)
-            {
-                if (tabControl.TabPages[i].Text == tabName)
-                {
-                    tabControl.TabPages.RemoveAt(i);
-                    DatabaseManager.Instance.LogAction(userId, "TAB_HIDDEN", $"Скрыта вкладка: {tabName}");
-                    break;
-                }
             }
         }
 
