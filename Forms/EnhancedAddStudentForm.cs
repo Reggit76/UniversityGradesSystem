@@ -45,7 +45,7 @@ namespace UniversityGradesSystem.Forms
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.StartPosition = FormStartPosition.CenterParent;
-            this.Size = new Size(450, 420);
+            this.Size = new Size(500, 480); // Увеличили размер формы
 
             // === Главный контейнер ===
             mainLayout = new TableLayoutPanel
@@ -53,10 +53,10 @@ namespace UniversityGradesSystem.Forms
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
                 RowCount = 3,
-                Padding = new Padding(20)
+                Padding = new Padding(15)
             };
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F)); // Заголовок
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F)); // Форма
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 70F)); // Заголовок
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 320F)); // Форма - фиксированная высота
             mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F)); // Кнопки
 
             // === Заголовочная панель ===
@@ -64,7 +64,7 @@ namespace UniversityGradesSystem.Forms
             {
                 Dock = DockStyle.Fill,
                 BackColor = Color.FromArgb(46, 204, 113),
-                Padding = new Padding(15, 10, 15, 10)
+                Padding = new Padding(15, 15, 15, 15)
             };
 
             Label titleLabel = new Label
@@ -84,28 +84,15 @@ namespace UniversityGradesSystem.Forms
             {
                 Dock = DockStyle.Fill,
                 BackColor = Color.White,
-                Padding = new Padding(20, 15, 20, 15)
+                Padding = new Padding(25, 20, 25, 20) // Увеличили отступы
             };
             formPanel.BorderStyle = BorderStyle.FixedSingle;
 
-            // Используем TableLayoutPanel для полей формы
-            TableLayoutPanel fieldsLayout = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = 2,
-                RowCount = 4,
-                BackColor = Color.Transparent
-            };
-
-            // Настраиваем колонки
-            fieldsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120F));
-            fieldsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-
-            // Настраиваем строки
-            for (int i = 0; i < 4; i++)
-            {
-                fieldsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F));
-            }
+            // Используем обычный подход с абсолютным позиционированием для более точного контроля
+            int startY = 15;
+            int labelHeight = 25;
+            int textBoxHeight = 35;
+            int spacing = 55; // Расстояние между полями
 
             // === Поле "Имя" ===
             Label lblFirstName = new Label
@@ -113,23 +100,20 @@ namespace UniversityGradesSystem.Forms
                 Text = "Имя:",
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(52, 73, 94),
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleLeft,
-                AutoSize = false
+                Location = new Point(0, startY),
+                Size = new Size(120, labelHeight),
+                TextAlign = ContentAlignment.BottomLeft
             };
 
             txtFirstName = new TextBox
             {
-                Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI", 10F),
-                Margin = new Padding(0, 10, 0, 10),
+                Font = new Font("Segoe UI", 11F),
+                Location = new Point(0, startY + labelHeight + 3),
+                Size = new Size(400, textBoxHeight),
                 BackColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle,
                 MaxLength = 100
             };
-
-            fieldsLayout.Controls.Add(lblFirstName, 0, 0);
-            fieldsLayout.Controls.Add(txtFirstName, 1, 0);
 
             // === Поле "Отчество" ===
             Label lblMiddleName = new Label
@@ -137,23 +121,20 @@ namespace UniversityGradesSystem.Forms
                 Text = "Отчество:",
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(52, 73, 94),
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleLeft,
-                AutoSize = false
+                Location = new Point(0, startY + spacing),
+                Size = new Size(120, labelHeight),
+                TextAlign = ContentAlignment.BottomLeft
             };
 
             txtMiddleName = new TextBox
             {
-                Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI", 10F),
-                Margin = new Padding(0, 10, 0, 10),
+                Font = new Font("Segoe UI", 11F),
+                Location = new Point(0, startY + spacing + labelHeight + 3),
+                Size = new Size(400, textBoxHeight),
                 BackColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle,
                 MaxLength = 100
             };
-
-            fieldsLayout.Controls.Add(lblMiddleName, 0, 1);
-            fieldsLayout.Controls.Add(txtMiddleName, 1, 1);
 
             // === Поле "Фамилия" ===
             Label lblLastName = new Label
@@ -161,23 +142,20 @@ namespace UniversityGradesSystem.Forms
                 Text = "Фамилия:",
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(52, 73, 94),
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleLeft,
-                AutoSize = false
+                Location = new Point(0, startY + spacing * 2),
+                Size = new Size(120, labelHeight),
+                TextAlign = ContentAlignment.BottomLeft
             };
 
             txtLastName = new TextBox
             {
-                Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI", 10F),
-                Margin = new Padding(0, 10, 0, 10),
+                Font = new Font("Segoe UI", 11F),
+                Location = new Point(0, startY + spacing * 2 + labelHeight + 3),
+                Size = new Size(400, textBoxHeight),
                 BackColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle,
                 MaxLength = 100
             };
-
-            fieldsLayout.Controls.Add(lblLastName, 0, 2);
-            fieldsLayout.Controls.Add(txtLastName, 1, 2);
 
             // === Поле "Группа" ===
             Label lblGroup = new Label
@@ -185,25 +163,29 @@ namespace UniversityGradesSystem.Forms
                 Text = "Группа:",
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(52, 73, 94),
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleLeft,
-                AutoSize = false
+                Location = new Point(0, startY + spacing * 3),
+                Size = new Size(120, labelHeight),
+                TextAlign = ContentAlignment.BottomLeft
             };
 
             cmbGroup = new ComboBox
             {
-                Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI", 10F),
+                Font = new Font("Segoe UI", 11F),
+                Location = new Point(0, startY + spacing * 3 + labelHeight + 3),
+                Size = new Size(400, textBoxHeight),
                 DropDownStyle = ComboBoxStyle.DropDownList,
-                Margin = new Padding(0, 10, 0, 10),
                 BackColor = Color.White,
-                FlatStyle = FlatStyle.Flat
+                FlatStyle = FlatStyle.Popup
             };
 
-            fieldsLayout.Controls.Add(lblGroup, 0, 3);
-            fieldsLayout.Controls.Add(cmbGroup, 1, 3);
+            // Добавляем все элементы в панель формы
+            formPanel.Controls.AddRange(new Control[] {
+                lblFirstName, txtFirstName,
+                lblMiddleName, txtMiddleName,
+                lblLastName, txtLastName,
+                lblGroup, cmbGroup
+            });
 
-            formPanel.Controls.Add(fieldsLayout);
             mainLayout.Controls.Add(formPanel, 0, 1);
 
             // === Панель кнопок ===
@@ -215,28 +197,18 @@ namespace UniversityGradesSystem.Forms
             };
             buttonPanel.BorderStyle = BorderStyle.FixedSingle;
 
-            TableLayoutPanel buttonLayout = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = 3,
-                RowCount = 1,
-                BackColor = Color.Transparent
-            };
-            buttonLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F)); // Пустое место
-            buttonLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100F)); // Кнопка "Сохранить"
-            buttonLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100F)); // Кнопка "Отмена"
-
             // Кнопка "Сохранить"
             btnSave = new Button
             {
                 Text = "💾 Сохранить",
-                Dock = DockStyle.Fill,
+                Size = new Size(120, 40),
+                Location = new Point(buttonPanel.Width - 250, 10),
                 BackColor = Color.FromArgb(46, 204, 113),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 Cursor = Cursors.Hand,
-                Margin = new Padding(5, 5, 2, 5)
+                Anchor = AnchorStyles.Top | AnchorStyles.Right
             };
             btnSave.FlatAppearance.BorderSize = 0;
             btnSave.Click += BtnSave_Click;
@@ -245,23 +217,20 @@ namespace UniversityGradesSystem.Forms
             btnCancel = new Button
             {
                 Text = "❌ Отмена",
-                Dock = DockStyle.Fill,
+                Size = new Size(120, 40),
+                Location = new Point(buttonPanel.Width - 125, 10),
                 BackColor = Color.FromArgb(231, 76, 60),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 Cursor = Cursors.Hand,
-                Margin = new Padding(3, 5, 5, 5),
-                DialogResult = DialogResult.Cancel
+                DialogResult = DialogResult.Cancel,
+                Anchor = AnchorStyles.Top | AnchorStyles.Right
             };
             btnCancel.FlatAppearance.BorderSize = 0;
             btnCancel.Click += (s, e) => this.Close();
 
-            buttonLayout.Controls.Add(new Panel(), 0, 0); // Пустое место
-            buttonLayout.Controls.Add(btnSave, 1, 0);
-            buttonLayout.Controls.Add(btnCancel, 2, 0);
-
-            buttonPanel.Controls.Add(buttonLayout);
+            buttonPanel.Controls.AddRange(new Control[] { btnSave, btnCancel });
             mainLayout.Controls.Add(buttonPanel, 0, 2);
 
             // === Добавляем главный контейнер на форму ===

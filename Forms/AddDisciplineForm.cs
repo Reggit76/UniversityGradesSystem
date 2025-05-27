@@ -34,7 +34,7 @@ namespace UniversityGradesSystem.Forms
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.StartPosition = FormStartPosition.CenterParent;
-            this.Size = new Size(450, 280);
+            this.Size = new Size(500, 350); // Увеличили размер формы
 
             // === Главный контейнер ===
             mainLayout = new TableLayoutPanel
@@ -42,10 +42,10 @@ namespace UniversityGradesSystem.Forms
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
                 RowCount = 3,
-                Padding = new Padding(20)
+                Padding = new Padding(15)
             };
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F)); // Заголовок
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F)); // Форма
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 70F)); // Заголовок
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 200F)); // Форма - фиксированная высота
             mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F)); // Кнопки
 
             // === Заголовочная панель ===
@@ -53,7 +53,7 @@ namespace UniversityGradesSystem.Forms
             {
                 Dock = DockStyle.Fill,
                 BackColor = Color.FromArgb(155, 89, 182),
-                Padding = new Padding(15, 10, 15, 10)
+                Padding = new Padding(15, 15, 15, 15)
             };
 
             Label titleLabel = new Label
@@ -73,23 +73,9 @@ namespace UniversityGradesSystem.Forms
             {
                 Dock = DockStyle.Fill,
                 BackColor = Color.White,
-                Padding = new Padding(20, 15, 20, 15)
+                Padding = new Padding(25, 20, 25, 20)
             };
             formPanel.BorderStyle = BorderStyle.FixedSingle;
-
-            // Используем TableLayoutPanel для полей формы
-            TableLayoutPanel fieldsLayout = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = 1,
-                RowCount = 3,
-                BackColor = Color.Transparent
-            };
-
-            // Настраиваем строки
-            fieldsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F)); // Лейбл
-            fieldsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F)); // Поле ввода
-            fieldsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F)); // Описание
 
             // === Лейбл ===
             Label lblName = new Label
@@ -97,17 +83,17 @@ namespace UniversityGradesSystem.Forms
                 Text = "Название дисциплины:",
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(52, 73, 94),
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.BottomLeft,
-                AutoSize = false
+                Location = new Point(0, 15),
+                Size = new Size(200, 25),
+                TextAlign = ContentAlignment.BottomLeft
             };
 
             // === Поле ввода ===
             txtName = new TextBox
             {
-                Dock = DockStyle.Fill,
                 Font = new Font("Segoe UI", 11F),
-                Margin = new Padding(0, 5, 0, 10),
+                Location = new Point(0, 45),
+                Size = new Size(400, 35),
                 BackColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle,
                 MaxLength = 100
@@ -119,16 +105,13 @@ namespace UniversityGradesSystem.Forms
                 Text = "💡 Введите полное название дисциплины.\nПример: «Основы программирования», «Математический анализ», «История России»",
                 Font = new Font("Segoe UI", 9F, FontStyle.Italic),
                 ForeColor = Color.FromArgb(127, 140, 141),
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.TopLeft,
-                AutoSize = false
+                Location = new Point(0, 90),
+                Size = new Size(400, 60),
+                TextAlign = ContentAlignment.TopLeft
             };
 
-            fieldsLayout.Controls.Add(lblName, 0, 0);
-            fieldsLayout.Controls.Add(txtName, 0, 1);
-            fieldsLayout.Controls.Add(lblDescription, 0, 2);
-
-            formPanel.Controls.Add(fieldsLayout);
+            // Добавляем элементы в панель формы
+            formPanel.Controls.AddRange(new Control[] { lblName, txtName, lblDescription });
             mainLayout.Controls.Add(formPanel, 0, 1);
 
             // === Панель кнопок ===
@@ -140,28 +123,19 @@ namespace UniversityGradesSystem.Forms
             };
             buttonPanel.BorderStyle = BorderStyle.FixedSingle;
 
-            TableLayoutPanel buttonLayout = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = 3,
-                RowCount = 1,
-                BackColor = Color.Transparent
-            };
-            buttonLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F)); // Пустое место
-            buttonLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100F)); // Кнопка "Сохранить"
-            buttonLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100F)); // Кнопка "Отмена"
-
             // Кнопка "Сохранить"
             btnSave = new Button
             {
                 Text = "💾 Сохранить",
-                Dock = DockStyle.Fill,
-                BackColor = Color.FromArgb(155, 89, 182),
+                Size = new Size(120, 40),
+                Location = new Point(buttonPanel.Width - 250, 10),
+                BackColor = Color.FromArgb(189, 195, 199), // Изначально неактивная
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 Cursor = Cursors.Hand,
-                Margin = new Padding(5, 5, 2, 5)
+                Enabled = false, // Изначально отключена
+                Anchor = AnchorStyles.Top | AnchorStyles.Right
             };
             btnSave.FlatAppearance.BorderSize = 0;
             btnSave.Click += BtnSave_Click;
@@ -170,23 +144,20 @@ namespace UniversityGradesSystem.Forms
             btnCancel = new Button
             {
                 Text = "❌ Отмена",
-                Dock = DockStyle.Fill,
+                Size = new Size(120, 40),
+                Location = new Point(buttonPanel.Width - 125, 10),
                 BackColor = Color.FromArgb(231, 76, 60),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 Cursor = Cursors.Hand,
-                Margin = new Padding(3, 5, 5, 5),
-                DialogResult = DialogResult.Cancel
+                DialogResult = DialogResult.Cancel,
+                Anchor = AnchorStyles.Top | AnchorStyles.Right
             };
             btnCancel.FlatAppearance.BorderSize = 0;
             btnCancel.Click += (s, e) => this.Close();
 
-            buttonLayout.Controls.Add(new Panel(), 0, 0); // Пустое место
-            buttonLayout.Controls.Add(btnSave, 1, 0);
-            buttonLayout.Controls.Add(btnCancel, 2, 0);
-
-            buttonPanel.Controls.Add(buttonLayout);
+            buttonPanel.Controls.AddRange(new Control[] { btnSave, btnCancel });
             mainLayout.Controls.Add(buttonPanel, 0, 2);
 
             // === Добавляем главный контейнер на форму ===
@@ -194,6 +165,23 @@ namespace UniversityGradesSystem.Forms
 
             // Устанавливаем фокус на поле ввода
             this.ActiveControl = txtName;
+
+            // Настраиваем обработку изменения текста
+            txtName.TextChanged += (sender, args) =>
+            {
+                // Обновляем состояние кнопки сохранения
+                btnSave.Enabled = !string.IsNullOrWhiteSpace(txtName.Text) && txtName.Text.Trim().Length >= 3;
+
+                // Меняем цвет кнопки в зависимости от состояния
+                if (btnSave.Enabled)
+                {
+                    btnSave.BackColor = Color.FromArgb(155, 89, 182);
+                }
+                else
+                {
+                    btnSave.BackColor = Color.FromArgb(189, 195, 199);
+                }
+            };
 
             this.ResumeLayout(false);
         }
@@ -309,7 +297,7 @@ namespace UniversityGradesSystem.Forms
         // Дополнительная обработка нажатий клавиш
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if (keyData == Keys.Enter)
+            if (keyData == Keys.Enter && btnSave.Enabled)
             {
                 BtnSave_Click(btnSave, EventArgs.Empty);
                 return true;
@@ -321,32 +309,6 @@ namespace UniversityGradesSystem.Forms
             }
 
             return base.ProcessCmdKey(ref msg, keyData);
-        }
-
-        // Обработка изменения текста для динамической валидации
-        protected override void OnLoad(EventArgs e)
-        {
-            base.OnLoad(e);
-
-            txtName.TextChanged += (sender, args) =>
-            {
-                // Обновляем состояние кнопки сохранения
-                btnSave.Enabled = !string.IsNullOrWhiteSpace(txtName.Text) && txtName.Text.Trim().Length >= 3;
-
-                // Меняем цвет кнопки в зависимости от состояния
-                if (btnSave.Enabled)
-                {
-                    btnSave.BackColor = Color.FromArgb(155, 89, 182);
-                }
-                else
-                {
-                    btnSave.BackColor = Color.FromArgb(189, 195, 199);
-                }
-            };
-
-            // Изначально кнопка отключена
-            btnSave.Enabled = false;
-            btnSave.BackColor = Color.FromArgb(189, 195, 199);
         }
     }
 }
