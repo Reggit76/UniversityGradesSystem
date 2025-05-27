@@ -701,21 +701,5 @@ namespace UniversityGradesSystem.Forms
                 Console.WriteLine($"Исключение в BtnSave_Click: {ex}");
             }
         }
-
-        // Вспомогательные классы
-        private class CourseDisplay
-        {
-            public int Id { get; set; }
-            public int Number { get; set; }
-            public string DisplayText { get; set; }
-        }
-
-        private class SemesterDisplay
-        {
-            public int Id { get; set; }
-            public int Number { get; set; }
-            public int CourseNumber { get; set; }
-            public string DisplayText { get; set; }
-        }
     }
 }

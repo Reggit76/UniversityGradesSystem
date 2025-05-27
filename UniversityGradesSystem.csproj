@@ -172,6 +172,7 @@
     <Compile Include="Models\AuditLog.cs" />
     <Compile Include="Models\Course.cs" />
     <Compile Include="Models\DisciplineSemester.cs" />
+    <Compile Include="Models\DisplayHelpers.cs" />
     <Compile Include="Models\Grade.cs" />
     <Compile Include="Models\Group.cs" />
     <Compile Include="Models\Semester.cs" />
@@ -191,6 +192,9 @@
     <Compile Include="Services\ReportService.cs" />
     <Compile Include="Services\StudentService.cs" />
     <Compile Include="Services\TeacherService.cs" />
+    <EmbeddedResource Include="Forms\EnhancedGradeEntryForm.resx">
+      <DependentUpon>EnhancedGradeEntryForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

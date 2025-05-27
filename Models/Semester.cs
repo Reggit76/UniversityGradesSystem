@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace UniversityGradesSystem.Models
 {
-    internal class Semester
+    public class Semester
     {
+        public int Id { get; set; }
+        public int Number { get; set; }
+        public int CourseId { get; set; }
     }
 }

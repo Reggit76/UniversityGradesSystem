@@ -30,8 +30,14 @@ namespace UniversityGradesSystem.Forms
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            // Базовая инициализация - реальная инициализация в InitializeEnhancedComponent
+            this.SuspendLayout();
+            // 
+            // EnhancedGradeEntryForm
+            // 
+            this.ClientSize = new System.Drawing.Size(830, 407);
+            this.Name = "EnhancedGradeEntryForm";
+            this.ResumeLayout(false);
+
         }
 
         #endregion

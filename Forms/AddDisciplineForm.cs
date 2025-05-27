@@ -328,7 +328,7 @@ namespace UniversityGradesSystem.Forms
         {
             base.OnLoad(e);
 
-            txtName.TextChanged += (s, e) =>
+            txtName.TextChanged += (sender, args) =>
             {
                 // Обновляем состояние кнопки сохранения
                 btnSave.Enabled = !string.IsNullOrWhiteSpace(txtName.Text) && txtName.Text.Trim().Length >= 3;

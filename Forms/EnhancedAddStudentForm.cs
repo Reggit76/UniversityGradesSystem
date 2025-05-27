@@ -9,27 +9,29 @@ using Npgsql;
 
 namespace UniversityGradesSystem.Forms
 {
-    public partial class EnhancedAddGroupForm : Form
+    public partial class EnhancedAddStudentForm : Form
     {
         private int adminUserId;
+        private StudentService studentService;
         private GroupService groupService;
 
         // UI элементы
         private TableLayoutPanel mainLayout;
-        private TextBox txtName;
-        private ComboBox cmbSpecialty;
-        private ComboBox cmbCourse;
+        private TextBox txtFirstName;
+        private TextBox txtMiddleName;
+        private TextBox txtLastName;
+        private ComboBox cmbGroup;
         private Button btnSave;
         private Button btnCancel;
 
-        public EnhancedAddGroupForm(int adminUserId)
+        public EnhancedAddStudentForm(int adminUserId)
         {
             this.adminUserId = adminUserId;
+            this.studentService = new StudentService(DatabaseManager.Instance.GetConnectionString());
             this.groupService = new GroupService(DatabaseManager.Instance.GetConnectionString());
 
             InitializeEnhancedComponent();
-            LoadSpecialties();
-            LoadCourses();
+            LoadGroups();
         }
 
         private void InitializeEnhancedComponent()
@@ -37,13 +39,13 @@ namespace UniversityGradesSystem.Forms
             this.SuspendLayout();
 
             // === Настройки формы ===
-            this.Text = "Добавить группу";
+            this.Text = "Добавить студента";
             this.BackColor = Color.FromArgb(240, 244, 247);
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.StartPosition = FormStartPosition.CenterParent;
-            this.Size = new Size(450, 350);
+            this.Size = new Size(450, 420);
 
             // === Главный контейнер ===
             mainLayout = new TableLayoutPanel
@@ -61,13 +63,13 @@ namespace UniversityGradesSystem.Forms
             Panel headerPanel = new Panel
             {
                 Dock = DockStyle.Fill,
-                BackColor = Color.FromArgb(52, 152, 219),
+                BackColor = Color.FromArgb(46, 204, 113),
                 Padding = new Padding(15, 10, 15, 10)
             };
 
             Label titleLabel = new Label
             {
-                Text = "👥 Создание новой группы",
+                Text = "📝 Добавление нового студента",
                 Font = new Font("Segoe UI", 14F, FontStyle.Bold),
                 ForeColor = Color.White,
                 Dock = DockStyle.Fill,
@@ -91,7 +93,7 @@ namespace UniversityGradesSystem.Forms
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 2,
-                RowCount = 3,
+                RowCount = 4,
                 BackColor = Color.Transparent
             };
 
@@ -100,15 +102,15 @@ namespace UniversityGradesSystem.Forms
             fieldsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
 
             // Настраиваем строки
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 4; i++)
             {
                 fieldsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F));
             }
 
-            // === Поле "Название группы" ===
-            Label lblName = new Label
+            // === Поле "Имя" ===
+            Label lblFirstName = new Label
             {
-                Text = "Название:",
+                Text = "Имя:",
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(52, 73, 94),
                 Dock = DockStyle.Fill,
@@ -116,23 +118,23 @@ namespace UniversityGradesSystem.Forms
                 AutoSize = false
             };
 
-            txtName = new TextBox
+            txtFirstName = new TextBox
             {
                 Dock = DockStyle.Fill,
                 Font = new Font("Segoe UI", 10F),
                 Margin = new Padding(0, 10, 0, 10),
                 BackColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle,
-                MaxLength = 20
+                MaxLength = 100
             };
 
-            fieldsLayout.Controls.Add(lblName, 0, 0);
-            fieldsLayout.Controls.Add(txtName, 1, 0);
+            fieldsLayout.Controls.Add(lblFirstName, 0, 0);
+            fieldsLayout.Controls.Add(txtFirstName, 1, 0);
 
-            // === Поле "Специальность" ===
-            Label lblSpecialty = new Label
+            // === Поле "Отчество" ===
+            Label lblMiddleName = new Label
             {
-                Text = "Специальность:",
+                Text = "Отчество:",
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(52, 73, 94),
                 Dock = DockStyle.Fill,
@@ -140,7 +142,55 @@ namespace UniversityGradesSystem.Forms
                 AutoSize = false
             };
 
-            cmbSpecialty = new ComboBox
+            txtMiddleName = new TextBox
+            {
+                Dock = DockStyle.Fill,
+                Font = new Font("Segoe UI", 10F),
+                Margin = new Padding(0, 10, 0, 10),
+                BackColor = Color.White,
+                BorderStyle = BorderStyle.FixedSingle,
+                MaxLength = 100
+            };
+
+            fieldsLayout.Controls.Add(lblMiddleName, 0, 1);
+            fieldsLayout.Controls.Add(txtMiddleName, 1, 1);
+
+            // === Поле "Фамилия" ===
+            Label lblLastName = new Label
+            {
+                Text = "Фамилия:",
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(52, 73, 94),
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft,
+                AutoSize = false
+            };
+
+            txtLastName = new TextBox
+            {
+                Dock = DockStyle.Fill,
+                Font = new Font("Segoe UI", 10F),
+                Margin = new Padding(0, 10, 0, 10),
+                BackColor = Color.White,
+                BorderStyle = BorderStyle.FixedSingle,
+                MaxLength = 100
+            };
+
+            fieldsLayout.Controls.Add(lblLastName, 0, 2);
+            fieldsLayout.Controls.Add(txtLastName, 1, 2);
+
+            // === Поле "Группа" ===
+            Label lblGroup = new Label
+            {
+                Text = "Группа:",
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(52, 73, 94),
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft,
+                AutoSize = false
+            };
+
+            cmbGroup = new ComboBox
             {
                 Dock = DockStyle.Fill,
                 Font = new Font("Segoe UI", 10F),
@@ -150,32 +200,8 @@ namespace UniversityGradesSystem.Forms
                 FlatStyle = FlatStyle.Flat
             };
 
-            fieldsLayout.Controls.Add(lblSpecialty, 0, 1);
-            fieldsLayout.Controls.Add(cmbSpecialty, 1, 1);
-
-            // === Поле "Курс" ===
-            Label lblCourse = new Label
-            {
-                Text = "Курс:",
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(52, 73, 94),
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleLeft,
-                AutoSize = false
-            };
-
-            cmbCourse = new ComboBox
-            {
-                Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI", 10F),
-                DropDownStyle = ComboBoxStyle.DropDownList,
-                Margin = new Padding(0, 10, 0, 10),
-                BackColor = Color.White,
-                FlatStyle = FlatStyle.Flat
-            };
-
-            fieldsLayout.Controls.Add(lblCourse, 0, 2);
-            fieldsLayout.Controls.Add(cmbCourse, 1, 2);
+            fieldsLayout.Controls.Add(lblGroup, 0, 3);
+            fieldsLayout.Controls.Add(cmbGroup, 1, 3);
 
             formPanel.Controls.Add(fieldsLayout);
             mainLayout.Controls.Add(formPanel, 0, 1);
@@ -205,7 +231,7 @@ namespace UniversityGradesSystem.Forms
             {
                 Text = "💾 Сохранить",
                 Dock = DockStyle.Fill,
-                BackColor = Color.FromArgb(52, 152, 219),
+                BackColor = Color.FromArgb(46, 204, 113),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
@@ -242,243 +268,88 @@ namespace UniversityGradesSystem.Forms
             this.Controls.Add(mainLayout);
 
             // Устанавливаем фокус на первое поле
-            this.ActiveControl = txtName;
+            this.ActiveControl = txtFirstName;
 
             this.ResumeLayout(false);
         }
 
-        private void LoadSpecialties()
+        private void LoadGroups()
         {
             try
             {
-                var specialties = GetSpecialties();
+                var groups = groupService.GetAllGroups();
 
-                if (specialties.Count > 0)
+                if (groups != null && groups.Count > 0)
                 {
-                    cmbSpecialty.DisplayMember = "Name";
-                    cmbSpecialty.ValueMember = "Id";
-                    cmbSpecialty.DataSource = specialties;
-                    cmbSpecialty.SelectedIndex = -1;
+                    cmbGroup.DisplayMember = "Name";
+                    cmbGroup.ValueMember = "Id";
+                    cmbGroup.DataSource = groups;
+                    cmbGroup.SelectedIndex = -1;
                 }
                 else
                 {
-                    // Если специальностей нет, создаем дефолтные
-                    CreateDefaultSpecialties();
-                    specialties = GetSpecialties();
-
-                    cmbSpecialty.DisplayMember = "Name";
-                    cmbSpecialty.ValueMember = "Id";
-                    cmbSpecialty.DataSource = specialties;
-                    cmbSpecialty.SelectedIndex = -1;
+                    MessageBox.Show("В системе нет групп. Сначала создайте группы.", "Предупреждение",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка загрузки специальностей: {ex.Message}", "Ошибка",
+                MessageBox.Show($"Ошибка загрузки групп: {ex.Message}", "Ошибка",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void LoadCourses()
-        {
-            try
-            {
-                var courses = GetCourses();
-
-                if (courses.Count > 0)
-                {
-                    cmbCourse.DisplayMember = "DisplayText";
-                    cmbCourse.ValueMember = "Id";
-                    cmbCourse.DataSource = courses;
-                    cmbCourse.SelectedIndex = -1;
-                }
-                else
-                {
-                    // Если курсов нет, создаем дефолтные
-                    CreateDefaultCourses();
-                    courses = GetCourses();
-
-                    cmbCourse.DisplayMember = "DisplayText";
-                    cmbCourse.ValueMember = "Id";
-                    cmbCourse.DataSource = courses;
-                    cmbCourse.SelectedIndex = -1;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка загрузки курсов: {ex.Message}", "Ошибка",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private List<Specialty> GetSpecialties()
-        {
-            var specialties = new List<Specialty>();
-
-            try
-            {
-                using (var conn = new NpgsqlConnection(DatabaseManager.Instance.GetConnectionString()))
-                {
-                    conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT id, name FROM specialties ORDER BY name", conn))
-                    {
-                        using (var reader = cmd.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                specialties.Add(new Specialty
-                                {
-                                    Id = reader.GetInt32(0),
-                                    Name = reader.GetString(1)
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Ошибка получения специальностей: {ex.Message}");
-            }
-
-            return specialties;
-        }
-
-        private List<CourseDisplay> GetCourses()
-        {
-            var courses = new List<CourseDisplay>();
-
-            try
-            {
-                using (var conn = new NpgsqlConnection(DatabaseManager.Instance.GetConnectionString()))
-                {
-                    conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT id, number FROM courses ORDER BY number", conn))
-                    {
-                        using (var reader = cmd.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                courses.Add(new CourseDisplay
-                                {
-                                    Id = reader.GetInt32(0),
-                                    Number = reader.GetInt32(1),
-                                    DisplayText = $"{reader.GetInt32(1)} курс"
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Ошибка получения курсов: {ex.Message}");
-            }
-
-            return courses;
-        }
-
-        private void CreateDefaultSpecialties()
-        {
-            try
-            {
-                using (var conn = new NpgsqlConnection(DatabaseManager.Instance.GetConnectionString()))
-                {
-                    conn.Open();
-
-                    var defaultSpecialties = new[]
-                    {
-                        "Информатика и вычислительная техника",
-                        "Программная инженерия",
-                        "Информационные системы и технологии",
-                        "Прикладная математика и информатика",
-                        "Математическое обеспечение и администрирование информационных систем"
-                    };
-
-                    foreach (var specialty in defaultSpecialties)
-                    {
-                        using (var cmd = new NpgsqlCommand(
-                            "INSERT INTO specialties (name) VALUES (@name) ON CONFLICT (name) DO NOTHING", conn))
-                        {
-                            cmd.Parameters.AddWithValue("name", specialty);
-                            cmd.ExecuteNonQuery();
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Ошибка создания дефолтных специальностей: {ex.Message}");
-            }
-        }
-
-        private void CreateDefaultCourses()
-        {
-            try
-            {
-                using (var conn = new NpgsqlConnection(DatabaseManager.Instance.GetConnectionString()))
-                {
-                    conn.Open();
-
-                    for (int i = 1; i <= 4; i++)
-                    {
-                        using (var cmd = new NpgsqlCommand(
-                            "INSERT INTO courses (number) VALUES (@number) ON CONFLICT (number) DO NOTHING", conn))
-                        {
-                            cmd.Parameters.AddWithValue("number", i);
-                            cmd.ExecuteNonQuery();
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Ошибка создания дефолтных курсов: {ex.Message}");
             }
         }
 
         private void BtnSave_Click(object sender, EventArgs e)
         {
             // Валидация полей
-            if (string.IsNullOrWhiteSpace(txtName.Text))
+            if (string.IsNullOrWhiteSpace(txtFirstName.Text))
             {
-                MessageBox.Show("Введите название группы!", "Ошибка валидации",
+                MessageBox.Show("Введите имя студента!", "Ошибка валидации",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txtName.Focus();
+                txtFirstName.Focus();
                 return;
             }
 
-            if (cmbSpecialty.SelectedItem == null)
+            if (string.IsNullOrWhiteSpace(txtMiddleName.Text))
             {
-                MessageBox.Show("Выберите специальность!", "Ошибка валидации",
+                MessageBox.Show("Введите отчество студента!", "Ошибка валидации",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                cmbSpecialty.Focus();
+                txtMiddleName.Focus();
                 return;
             }
 
-            if (cmbCourse.SelectedItem == null)
+            if (string.IsNullOrWhiteSpace(txtLastName.Text))
             {
-                MessageBox.Show("Выберите курс!", "Ошибка валидации",
+                MessageBox.Show("Введите фамилию студента!", "Ошибка валидации",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                cmbCourse.Focus();
+                txtLastName.Focus();
+                return;
+            }
+
+            if (cmbGroup.SelectedItem == null)
+            {
+                MessageBox.Show("Выберите группу!", "Ошибка валидации",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                cmbGroup.Focus();
                 return;
             }
 
             try
             {
-                // Создаем объект группы
-                var group = new Group
+                // Создаем объект студента
+                var student = new Student
                 {
-                    Name = txtName.Text.Trim(),
-                    SpecialtyId = ((Specialty)cmbSpecialty.SelectedItem).Id,
-                    CourseId = ((CourseDisplay)cmbCourse.SelectedItem).Id
+                    FirstName = txtFirstName.Text.Trim(),
+                    MiddleName = txtMiddleName.Text.Trim(),
+                    LastName = txtLastName.Text.Trim(),
+                    GroupId = ((Group)cmbGroup.SelectedItem).Id
                 };
 
-                // Сохраняем группу
-                if (groupService.AddGroup(group, adminUserId))
+                // Сохраняем студента
+                if (studentService.AddStudent(student, adminUserId))
                 {
                     MessageBox.Show(
-                        $"Группа '{group.Name}' успешно создана!",
+                        $"Студент '{student.LastName} {student.FirstName} {student.MiddleName}' успешно добавлен!",
                         "Успех",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Information);
@@ -488,17 +359,17 @@ namespace UniversityGradesSystem.Forms
                 }
                 else
                 {
-                    MessageBox.Show("Не удалось создать группу. Возможно, группа с таким названием уже существует.", "Ошибка",
+                    MessageBox.Show("Не удалось добавить студента. Попробуйте еще раз.", "Ошибка",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при создании группы: {ex.Message}", "Ошибка",
+                MessageBox.Show($"Ошибка при добавлении студента: {ex.Message}", "Ошибка",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                 DatabaseManager.Instance.LogAction(adminUserId, "ERROR",
-                    $"Ошибка создания группы: {ex.Message}");
+                    $"Ошибка добавления студента: {ex.Message}");
             }
         }
 
@@ -507,17 +378,22 @@ namespace UniversityGradesSystem.Forms
         {
             if (keyData == Keys.Enter)
             {
-                if (this.ActiveControl == txtName)
+                if (this.ActiveControl == txtFirstName)
                 {
-                    cmbSpecialty.Focus();
+                    txtMiddleName.Focus();
                     return true;
                 }
-                else if (this.ActiveControl == cmbSpecialty)
+                else if (this.ActiveControl == txtMiddleName)
                 {
-                    cmbCourse.Focus();
+                    txtLastName.Focus();
                     return true;
                 }
-                else if (this.ActiveControl == cmbCourse)
+                else if (this.ActiveControl == txtLastName)
+                {
+                    cmbGroup.Focus();
+                    return true;
+                }
+                else if (this.ActiveControl == cmbGroup)
                 {
                     BtnSave_Click(btnSave, EventArgs.Empty);
                     return true;
@@ -530,14 +406,6 @@ namespace UniversityGradesSystem.Forms
             }
 
             return base.ProcessCmdKey(ref msg, keyData);
-        }
-
-        // Вспомогательный класс для отображения курсов
-        private class CourseDisplay
-        {
-            public int Id { get; set; }
-            public int Number { get; set; }
-            public string DisplayText { get; set; }
         }
     }
 }
