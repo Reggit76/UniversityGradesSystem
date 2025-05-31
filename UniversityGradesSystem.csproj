@@ -133,6 +133,12 @@
     <Compile Include="Forms\AddDisciplineForm.Designer.cs">
       <DependentUpon>AddDisciplineForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\AddSpecialtyForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\AddSpecialtyForm.Designer.cs">
+      <DependentUpon>AddSpecialtyForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\EnhancedAddGroupForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -169,6 +175,18 @@
     <Compile Include="Forms\MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\SpecialtyCurriculumForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\SpecialtyCurriculumForm.Designer.cs">
+      <DependentUpon>SpecialtyCurriculumForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\SpecialtyManagementForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\SpecialtyManagementForm.Designer.cs">
+      <DependentUpon>SpecialtyManagementForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Models\AuditLog.cs" />
     <Compile Include="Models\Course.cs" />
     <Compile Include="Models\DisciplineSemester.cs" />
@@ -177,6 +195,7 @@
     <Compile Include="Models\Group.cs" />
     <Compile Include="Models\Semester.cs" />
     <Compile Include="Models\Specialty.cs" />
+    <Compile Include="Models\SpecialtyCurriculum.cs" />
     <Compile Include="Models\Student.cs" />
     <Compile Include="Models\Discipline.cs" />
     <Compile Include="Models\Teacher.cs" />
@@ -190,6 +209,7 @@
     <Compile Include="Services\GroupService.cs" />
     <Compile Include="Services\LogService.cs" />
     <Compile Include="Services\ReportService.cs" />
+    <Compile Include="Services\SpecialtyService.cs" />
     <Compile Include="Services\StudentService.cs" />
     <Compile Include="Services\TeacherService.cs" />
     <EmbeddedResource Include="Forms\EnhancedGradeEntryForm.resx">

@@ -295,6 +295,7 @@ namespace UniversityGradesSystem.Forms
                 {
                     LoadStudents();
                     AddAdminTabs();
+                    AddSpecialtyTabs(); // Добавляем новые вкладки для специальностей
                 }
 
                 DatabaseManager.Instance.LogAction(userId, "UI_INITIALIZED", $"Интерфейс инициализирован для роли: {role}");
@@ -426,6 +427,82 @@ namespace UniversityGradesSystem.Forms
             flowPanel.Controls.AddRange(new Control[] { studentCard, groupCard, disciplineCard });
             managementTab.Controls.Add(flowPanel);
             tabControl.TabPages.Add(managementTab);
+        }
+
+        // Новый метод для добавления вкладок управления специальностями
+        private void AddSpecialtyTabs()
+        {
+            try
+            {
+                // === Вкладка управления специальностями ===
+                TabPage specialtyTab = new TabPage("🎓 Специальности");
+                specialtyTab.BackColor = Color.FromArgb(250, 250, 250);
+                specialtyTab.UseVisualStyleBackColor = true;
+
+                // Встраиваем форму управления специальностями
+                SpecialtyManagementForm specialtyForm = new SpecialtyManagementForm(userId);
+
+                specialtyForm.TopLevel = false;
+                specialtyForm.FormBorderStyle = FormBorderStyle.None;
+                specialtyForm.Dock = DockStyle.Fill;
+                specialtyForm.Visible = true;
+
+                specialtyTab.Controls.Add(specialtyForm);
+                specialtyForm.Show();
+
+                tabControl.TabPages.Add(specialtyTab);
+
+                DatabaseManager.Instance.LogAction(userId, "TAB_CREATED", "Создана вкладка управления специальностями");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка создания вкладки специальностей: {ex.Message}", "Ошибка",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                DatabaseManager.Instance.LogAction(userId, "ERROR", $"Ошибка создания вкладки специальностей: {ex.Message}");
+
+                // Создаем заглушку в случае ошибки
+                CreateSpecialtyTabStub();
+            }
+        }
+
+        private void CreateSpecialtyTabStub()
+        {
+            TabPage specialtyTab = new TabPage("🎓 Специальности");
+            specialtyTab.BackColor = Color.FromArgb(250, 250, 250);
+            specialtyTab.UseVisualStyleBackColor = true;
+
+            // Простая карточка для добавления специальности
+            FlowLayoutPanel flowPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = true,
+                Padding = new Padding(20),
+                AutoScroll = true
+            };
+
+            Panel addSpecialtyCard = CreateManagementCard(
+                "🎓 Добавить специальность",
+                "Создание новой специальности обучения",
+                Color.FromArgb(142, 68, 173),
+                (sender, e) =>
+                {
+                    try
+                    {
+                        AddSpecialtyForm form = new AddSpecialtyForm(userId);
+                        form.ShowDialog();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Ошибка открытия формы добавления специальности: {ex.Message}", "Ошибка",
+                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            );
+
+            flowPanel.Controls.Add(addSpecialtyCard);
+            specialtyTab.Controls.Add(flowPanel);
+            tabControl.TabPages.Add(specialtyTab);
         }
 
         private Panel CreateManagementCard(string title, string description, Color color, EventHandler clickHandler)
