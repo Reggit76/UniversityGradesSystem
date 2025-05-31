@@ -25,13 +25,13 @@ namespace UniversityGradesSystem.Forms
             InitializeComponent();
             this.userId = userId;
             this.role = role;
-            this.Text = $"Система учета успеваемости - {role.ToUpper()}";
+            this.Text = string.Format("Система учета успеваемости - {0}", role.ToUpper());
             this.WindowState = FormWindowState.Maximized;
 
             this.connString = DatabaseManager.Instance.GetConnectionString();
 
             // Логирование входа пользователя
-            DatabaseManager.Instance.LogAction(userId, "LOGIN", $"Пользователь вошел в систему. [ID, Роль]: [{userId}, {role}]");
+            DatabaseManager.Instance.LogAction(userId, "LOGIN", string.Format("Пользователь вошел в систему. [ID, Роль]: [{0}, {1}]", userId, role));
 
             // Инициализация элементов интерфейса
             InitializeUI();
@@ -76,7 +76,7 @@ namespace UniversityGradesSystem.Forms
             statusStrip.SizingGrip = false;
 
             ToolStripStatusLabel statusLabel = new ToolStripStatusLabel();
-            statusLabel.Text = $"Пользователь: {userId} | Роль: {role.ToUpper()} | {DateTime.Now:HH:mm:ss}";
+            statusLabel.Text = string.Format("Пользователь: {0} | Роль: {1} | {2:HH:mm:ss}", userId, role.ToUpper(), DateTime.Now);
             statusLabel.ForeColor = Color.White;
             statusLabel.Font = new Font("Segoe UI", 9F);
 
@@ -113,51 +113,257 @@ namespace UniversityGradesSystem.Forms
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
-                RowCount = 2,
+                RowCount = 4,
                 Padding = new Padding(10)
             };
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F));
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 100F)); // Заголовок и статистика
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F)); // Фильтры
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F)); // Таблица
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F)); // Статус
 
-            // Панель инструментов
-            Panel toolPanel = new Panel
+            // === Заголовочная панель ===
+            Panel headerPanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(52, 152, 219),
+                Padding = new Padding(15, 10, 15, 10)
+            };
+
+            TableLayoutPanel headerLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                RowCount = 1,
+                BackColor = Color.Transparent
+            };
+            headerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
+            headerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+
+            Label titleLabel = new Label
+            {
+                Text = "👥 Управление студентами",
+                Font = new Font("Segoe UI", 14F, FontStyle.Bold),
+                ForeColor = Color.White,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
+            // Панель статистики
+            TableLayoutPanel statsPanel = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                RowCount = 2,
+                BackColor = Color.Transparent
+            };
+            statsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            statsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            statsPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            statsPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+
+            // Элементы статистики (будут обновляться)
+            Label lblTotalStudents = new Label
+            {
+                Text = "Всего студентов: загрузка...",
+                Font = new Font("Segoe UI", 9F),
+                ForeColor = Color.White,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleRight,
+                Tag = "TotalStudents"
+            };
+
+            Label lblTotalGroups = new Label
+            {
+                Text = "Всего групп: загрузка...",
+                Font = new Font("Segoe UI", 9F),
+                ForeColor = Color.White,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleRight,
+                Tag = "TotalGroups"
+            };
+
+            Label lblWithGrades = new Label
+            {
+                Text = "С оценками: загрузка...",
+                Font = new Font("Segoe UI", 9F),
+                ForeColor = Color.White,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleRight,
+                Tag = "WithGrades"
+            };
+
+            Label lblSpecialties = new Label
+            {
+                Text = "Специальностей: загрузка...",
+                Font = new Font("Segoe UI", 9F),
+                ForeColor = Color.White,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleRight,
+                Tag = "Specialties"
+            };
+
+            statsPanel.Controls.Add(lblTotalStudents, 0, 0);
+            statsPanel.Controls.Add(lblTotalGroups, 1, 0);
+            statsPanel.Controls.Add(lblWithGrades, 0, 1);
+            statsPanel.Controls.Add(lblSpecialties, 1, 1);
+
+            headerLayout.Controls.Add(titleLabel, 0, 0);
+            headerLayout.Controls.Add(statsPanel, 1, 0);
+            headerPanel.Controls.Add(headerLayout);
+            mainLayout.Controls.Add(headerPanel, 0, 0);
+
+            // === Панель фильтров ===
+            Panel filtersPanel = new Panel
             {
                 Dock = DockStyle.Fill,
                 BackColor = Color.White,
                 Padding = new Padding(15, 10, 15, 10)
             };
-            toolPanel.BorderStyle = BorderStyle.FixedSingle;
+            filtersPanel.BorderStyle = BorderStyle.FixedSingle;
 
-            Label titleLabel = new Label
+            TableLayoutPanel filtersLayout = new TableLayoutPanel
             {
-                Text = "Список студентов",
-                Font = new Font("Segoe UI", 12F, FontStyle.Bold),
-                Dock = DockStyle.Left,
-                AutoSize = true,
+                Dock = DockStyle.Fill,
+                ColumnCount = 6,
+                RowCount = 1,
+                BackColor = Color.Transparent
+            };
+            filtersLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); // Лейбл
+            filtersLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 200F)); // Комбобокс групп
+            filtersLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120F)); // Кнопка фильтра
+            filtersLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120F)); // Кнопка сброса
+            filtersLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120F)); // Кнопка обновления
+            filtersLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F)); // Остальное
+
+            Label lblFilterGroup = new Label
+            {
+                Text = "Фильтр по группе:",
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 ForeColor = Color.FromArgb(52, 73, 94),
-                TextAlign = ContentAlignment.MiddleLeft
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Margin = new Padding(0, 0, 10, 0)
             };
 
-            toolPanel.Controls.Add(titleLabel);
-            mainLayout.Controls.Add(toolPanel, 0, 0);
+            ComboBox cmbFilterGroup = new ComboBox
+            {
+                Dock = DockStyle.Fill,
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Font = new Font("Segoe UI", 9F),
+                Margin = new Padding(0, 5, 10, 5),
+                Tag = "GroupFilter"
+            };
 
-            // Таблица студентов
+            Button btnFilter = new Button
+            {
+                Text = "🔍 Фильтр",
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(52, 152, 219),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                Cursor = Cursors.Hand,
+                Margin = new Padding(0, 5, 5, 5)
+            };
+            btnFilter.FlatAppearance.BorderSize = 0;
+
+            Button btnClearFilter = new Button
+            {
+                Text = "❌ Сброс",
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(231, 76, 60),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                Cursor = Cursors.Hand,
+                Margin = new Padding(5, 5, 5, 5)
+            };
+            btnClearFilter.FlatAppearance.BorderSize = 0;
+
+            Button btnRefreshStudents = new Button
+            {
+                Text = "🔄 Обновить",
+                Dock = DockStyle.Fill,
+                BackColor = Color.FromArgb(149, 165, 166),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                Cursor = Cursors.Hand,
+                Margin = new Padding(5, 5, 10, 5)
+            };
+            btnRefreshStudents.FlatAppearance.BorderSize = 0;
+
+            filtersLayout.Controls.Add(lblFilterGroup, 0, 0);
+            filtersLayout.Controls.Add(cmbFilterGroup, 1, 0);
+            filtersLayout.Controls.Add(btnFilter, 2, 0);
+            filtersLayout.Controls.Add(btnClearFilter, 3, 0);
+            filtersLayout.Controls.Add(btnRefreshStudents, 4, 0);
+
+            filtersPanel.Controls.Add(filtersLayout);
+            mainLayout.Controls.Add(filtersPanel, 0, 1);
+
+            // === Таблица студентов ===
             studentGrid = new DataGridView
             {
                 Dock = DockStyle.Fill,
-                AutoGenerateColumns = true,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.None,
-                ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
-                Font = new Font("Segoe UI", 9F),
-                GridColor = Color.FromArgb(230, 230, 230),
-                ReadOnly = true,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                AutoGenerateColumns = false,  // ВАЖНО: отключаем автогенерацию
                 AllowUserToAddRows = false,
                 AllowUserToDeleteRows = false,
+                ReadOnly = true,
+                BackgroundColor = Color.White,
+                BorderStyle = BorderStyle.None,
+                Font = new Font("Segoe UI", 9F),
+                GridColor = Color.FromArgb(230, 230, 230),
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                MultiSelect = false,
+                RowHeadersVisible = false,
                 AllowUserToResizeRows = false,
-                RowHeadersVisible = false
+                DataSource = null  // ВАЖНО: явно устанавливаем null
             };
+
+            // Очищаем существующие колонки
+            studentGrid.Columns.Clear();
+
+            // Настройка колонок
+            studentGrid.Columns.AddRange(new DataGridViewColumn[]
+            {
+                new DataGridViewTextBoxColumn {
+                    Name = "Id",
+                    HeaderText = "ID",
+                    Width = 60,
+                    ReadOnly = true
+                },
+                new DataGridViewTextBoxColumn {
+                    Name = "DisplayName",
+                    HeaderText = "ФИО студента",
+                    Width = 250,
+                    ReadOnly = true
+                },
+                new DataGridViewTextBoxColumn {
+                    Name = "GroupName",
+                    HeaderText = "Группа",
+                    Width = 120,
+                    ReadOnly = true
+                },
+                new DataGridViewTextBoxColumn {
+                    Name = "SpecialtyName",
+                    HeaderText = "Специальность",
+                    Width = 300,
+                    ReadOnly = true
+                },
+                new DataGridViewTextBoxColumn {
+                    Name = "CourseNumber",
+                    HeaderText = "Курс",
+                    Width = 80,
+                    ReadOnly = true
+                },
+                new DataGridViewTextBoxColumn {
+                    Name = "GroupInfo",
+                    HeaderText = "Полная информация о группе",
+                    Width = 400,
+                    ReadOnly = true
+                }
+            });
 
             // Стилизация заголовков
             studentGrid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(52, 73, 94);
@@ -166,9 +372,211 @@ namespace UniversityGradesSystem.Forms
             studentGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             studentGrid.ColumnHeadersHeight = 35;
 
-            mainLayout.Controls.Add(studentGrid, 0, 1);
+            // Альтернативные цвета строк
+            studentGrid.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(248, 249, 250);
+
+            mainLayout.Controls.Add(studentGrid, 0, 2);
+
+            // === Статусная строка ===
+            Label lblStudentsStatus = new Label
+            {
+                Text = "Загрузка данных...",
+                Dock = DockStyle.Fill,
+                ForeColor = Color.FromArgb(127, 140, 141),
+                Font = new Font("Segoe UI", 9F, FontStyle.Italic),
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(5, 0, 5, 0),
+                Tag = "StudentsStatus"
+            };
+            mainLayout.Controls.Add(lblStudentsStatus, 0, 3);
+
+            // === Обработчики событий ===
+
+            // Загрузка групп для фильтра
+            EventHandler loadGroupsForFilter = (s, e) =>
+            {
+                try
+                {
+                    var groupService = new GroupService(this.connString);
+                    var groups = groupService.GetAllGroups();
+
+                    cmbFilterGroup.Items.Clear();
+                    cmbFilterGroup.Items.Add(new { Id = -1, Name = "Все группы" });
+
+                    foreach (var group in groups)
+                    {
+                        cmbFilterGroup.Items.Add(group);
+                    }
+
+                    cmbFilterGroup.DisplayMember = "Name";
+                    cmbFilterGroup.ValueMember = "Id";
+                    cmbFilterGroup.SelectedIndex = 0;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Ошибка загрузки групп: " + ex.Message, "Ошибка",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            };
+
+            // Применение фильтра
+            btnFilter.Click += (s, e) =>
+            {
+                try
+                {
+                    var selectedItem = cmbFilterGroup.SelectedItem;
+                    if (selectedItem == null) return;
+
+                    dynamic group = selectedItem;
+                    int groupId = (int)group.Id;
+
+                    LoadStudentsFiltered(groupId, lblStudentsStatus);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Ошибка применения фильтра: " + ex.Message, "Ошибка",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            };
+
+            // Сброс фильтра
+            btnClearFilter.Click += (s, e) =>
+            {
+                cmbFilterGroup.SelectedIndex = 0;
+                LoadStudentsFiltered(-1, lblStudentsStatus);
+            };
+
+            // Обновление данных
+            btnRefreshStudents.Click += (s, e) =>
+            {
+                var selectedItem = cmbFilterGroup.SelectedItem;
+                int groupId = -1;
+                if (selectedItem != null)
+                {
+                    dynamic group = selectedItem;
+                    groupId = (int)group.Id;
+                }
+
+                LoadStudentsFiltered(groupId, lblStudentsStatus);
+                loadGroupsForFilter(s, e);
+                LoadStudentsStatistics(statsPanel);
+            };
+
+            // Инициализация данных при создании вкладки
+            studentTab.VisibleChanged += (s, e) =>
+            {
+                if (studentTab.Visible)
+                {
+                    loadGroupsForFilter(s, e);
+                    LoadStudentsFiltered(-1, lblStudentsStatus);
+                    LoadStudentsStatistics(statsPanel);
+                }
+            };
+
             studentTab.Controls.Add(mainLayout);
             tabControl.TabPages.Add(studentTab);
+        }
+
+        private void LoadStudentsFiltered(int groupId, Label statusLabel)
+        {
+            try
+            {
+                statusLabel.Text = "Загрузка студентов...";
+                statusLabel.Refresh();
+
+                // ВАЖНО: Отключаем привязку данных и очищаем
+                studentGrid.DataSource = null;
+                studentGrid.Rows.Clear();
+
+                var studentService = new StudentService(this.connString);
+                List<StudentWithGroup> students;
+
+                if (groupId == -1)
+                {
+                    students = studentService.GetAllStudentsWithGroups();
+                    statusLabel.Text = string.Format("Показаны все студенты: {0}", students.Count);
+                }
+                else
+                {
+                    students = studentService.GetStudentsByGroupDetailed(groupId);
+                    statusLabel.Text = string.Format("Показаны студенты группы: {0}", students.Count);
+                }
+
+                // Заполняем таблицу вручную
+                foreach (var student in students)
+                {
+                    int rowIndex = studentGrid.Rows.Add();
+                    var row = studentGrid.Rows[rowIndex];
+
+                    row.Cells["Id"].Value = student.Id;
+                    row.Cells["DisplayName"].Value = student.DisplayName;
+                    row.Cells["GroupName"].Value = student.GroupName;
+                    row.Cells["SpecialtyName"].Value = student.SpecialtyName;
+                    row.Cells["CourseNumber"].Value = student.CourseNumber;
+                    row.Cells["GroupInfo"].Value = student.GroupInfo;
+
+                    // Сохраняем объект студента в Tag строки
+                    row.Tag = student;
+                }
+
+                DatabaseManager.Instance.LogAction(userId, "DATA_LOADED",
+                    string.Format("Загружен список студентов: {0} записей (фильтр: группа {1})", students.Count, groupId));
+            }
+            catch (Exception ex)
+            {
+                statusLabel.Text = "Ошибка загрузки: " + ex.Message;
+                MessageBox.Show("Ошибка загрузки студентов: " + ex.Message, "Ошибка",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                DatabaseManager.Instance.LogAction(userId, "ERROR",
+                    "Ошибка загрузки студентов: " + ex.Message);
+            }
+        }
+
+        // Метод для загрузки статистики студентов
+        private void LoadStudentsStatistics(TableLayoutPanel statsPanel)
+        {
+            try
+            {
+                var studentService = new StudentService(this.connString);
+                var stats = studentService.GetStudentsStatistics();
+
+                foreach (Control control in statsPanel.Controls)
+                {
+                    if (control is Label label && label.Tag != null)
+                    {
+                        string tag = label.Tag.ToString();
+                        switch (tag)
+                        {
+                            case "TotalStudents":
+                                label.Text = string.Format("Всего студентов: {0}", GetStatValue(stats, "TotalStudents", 0));
+                                break;
+                            case "TotalGroups":
+                                label.Text = string.Format("Всего групп: {0}", GetStatValue(stats, "TotalGroups", 0));
+                                break;
+                            case "WithGrades":
+                                label.Text = string.Format("С оценками: {0}", GetStatValue(stats, "StudentsWithGrades", 0));
+                                break;
+                            case "Specialties":
+                                label.Text = string.Format("Специальностей: {0}", GetStatValue(stats, "TotalSpecialties", 0));
+                                break;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Ошибка загрузки статистики: " + ex.Message);
+            }
+        }
+
+        // Вспомогательный метод для получения значения из Dictionary с дефолтным значением
+        private int GetStatValue(Dictionary<string, int> stats, string key, int defaultValue)
+        {
+            if (stats != null && stats.ContainsKey(key))
+            {
+                return stats[key];
+            }
+            return defaultValue;
         }
 
         private void CreateDisciplinesTab()
@@ -266,7 +674,7 @@ namespace UniversityGradesSystem.Forms
                 // В случае ошибки создаем простую заглушку
                 Label errorLabel = new Label
                 {
-                    Text = $"Ошибка загрузки аналитики: {ex.Message}",
+                    Text = string.Format("Ошибка загрузки аналитики: {0}", ex.Message),
                     Dock = DockStyle.Fill,
                     TextAlign = ContentAlignment.MiddleCenter,
                     Font = new Font("Segoe UI", 12F),
@@ -276,7 +684,7 @@ namespace UniversityGradesSystem.Forms
                 };
                 analyticsTab.Controls.Add(errorLabel);
 
-                DatabaseManager.Instance.LogAction(userId, "ERROR", $"Ошибка создания вкладки аналитики: {ex.Message}");
+                DatabaseManager.Instance.LogAction(userId, "ERROR", string.Format("Ошибка создания вкладки аналитики: {0}", ex.Message));
             }
 
             tabControl.TabPages.Add(analyticsTab);
@@ -293,18 +701,18 @@ namespace UniversityGradesSystem.Forms
                 }
                 else if (role == "admin")
                 {
-                    LoadStudents();
+                    // УБИРАЕМ вызов LoadStudents() - теперь загрузка происходит в самой вкладке
                     AddAdminTabs();
                     AddSpecialtyTabs(); // Добавляем новые вкладки для специальностей
                 }
 
-                DatabaseManager.Instance.LogAction(userId, "UI_INITIALIZED", $"Интерфейс инициализирован для роли: {role}");
+                DatabaseManager.Instance.LogAction(userId, "UI_INITIALIZED", string.Format("Интерфейс инициализирован для роли: {0}", role));
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка инициализации интерфейса: {ex.Message}", "Ошибка",
+                MessageBox.Show(string.Format("Ошибка инициализации интерфейса: {0}", ex.Message), "Ошибка",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
-                DatabaseManager.Instance.LogAction(userId, "ERROR", $"Ошибка инициализации UI: {ex.Message}");
+                DatabaseManager.Instance.LogAction(userId, "ERROR", string.Format("Ошибка инициализации UI: {0}", ex.Message));
             }
         }
 
@@ -338,9 +746,9 @@ namespace UniversityGradesSystem.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка создания вкладки выставления оценок: {ex.Message}", "Ошибка",
+                MessageBox.Show(string.Format("Ошибка создания вкладки выставления оценок: {0}", ex.Message), "Ошибка",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
-                DatabaseManager.Instance.LogAction(userId, "ERROR", $"Ошибка создания вкладки оценок: {ex.Message}");
+                DatabaseManager.Instance.LogAction(userId, "ERROR", string.Format("Ошибка создания вкладки оценок: {0}", ex.Message));
             }
         }
 
@@ -373,12 +781,13 @@ namespace UniversityGradesSystem.Forms
                         EnhancedAddStudentForm form = new EnhancedAddStudentForm(userId);
                         if (form.ShowDialog() == DialogResult.OK)
                         {
-                            LoadStudents(); // Обновляем список после добавления
+                            // Обновляем список только если вкладка студентов видима
+                            // LoadStudents() больше не нужен
                         }
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Ошибка открытия формы добавления студента: {ex.Message}", "Ошибка",
+                        MessageBox.Show(string.Format("Ошибка открытия формы добавления студента: {0}", ex.Message), "Ошибка",
                             MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
@@ -398,7 +807,7 @@ namespace UniversityGradesSystem.Forms
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Ошибка открытия формы добавления группы: {ex.Message}", "Ошибка",
+                        MessageBox.Show(string.Format("Ошибка открытия формы добавления группы: {0}", ex.Message), "Ошибка",
                             MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
@@ -418,7 +827,7 @@ namespace UniversityGradesSystem.Forms
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Ошибка открытия формы добавления дисциплины: {ex.Message}", "Ошибка",
+                        MessageBox.Show(string.Format("Ошибка открытия формы добавления дисциплины: {0}", ex.Message), "Ошибка",
                             MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
@@ -456,9 +865,9 @@ namespace UniversityGradesSystem.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка создания вкладки специальностей: {ex.Message}", "Ошибка",
+                MessageBox.Show(string.Format("Ошибка создания вкладки специальностей: {0}", ex.Message), "Ошибка",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
-                DatabaseManager.Instance.LogAction(userId, "ERROR", $"Ошибка создания вкладки специальностей: {ex.Message}");
+                DatabaseManager.Instance.LogAction(userId, "ERROR", string.Format("Ошибка создания вкладки специальностей: {0}", ex.Message));
 
                 // Создаем заглушку в случае ошибки
                 CreateSpecialtyTabStub();
@@ -494,7 +903,7 @@ namespace UniversityGradesSystem.Forms
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Ошибка открытия формы добавления специальности: {ex.Message}", "Ошибка",
+                        MessageBox.Show(string.Format("Ошибка открытия формы добавления специальности: {0}", ex.Message), "Ошибка",
                             MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
@@ -559,41 +968,6 @@ namespace UniversityGradesSystem.Forms
             return card;
         }
 
-        private void LoadStudents()
-        {
-            try
-            {
-                var studentService = new StudentService(this.connString);
-                var students = studentService.GetAllStudents();
-                studentGrid.DataSource = students;
-
-                // Улучшаем отображение колонок
-                if (studentGrid.Columns.Count > 0)
-                {
-                    studentGrid.Columns["Id"].HeaderText = "ID";
-                    studentGrid.Columns["FirstName"].HeaderText = "Имя";
-                    studentGrid.Columns["MiddleName"].HeaderText = "Отчество";
-                    studentGrid.Columns["LastName"].HeaderText = "Фамилия";
-                    studentGrid.Columns["GroupId"].HeaderText = "ID группы";
-
-                    // Настраиваем ширину колонок
-                    studentGrid.Columns["Id"].Width = 60;
-                    studentGrid.Columns["FirstName"].Width = 150;
-                    studentGrid.Columns["MiddleName"].Width = 150;
-                    studentGrid.Columns["LastName"].Width = 150;
-                    studentGrid.Columns["GroupId"].Width = 100;
-                }
-
-                DatabaseManager.Instance.LogAction(userId, "DATA_LOADED", $"Загружен список студентов: {students.Count} записей");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка загрузки студентов: {ex.Message}", "Ошибка",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-                DatabaseManager.Instance.LogAction(userId, "ERROR", $"Ошибка загрузки студентов: {ex.Message}");
-            }
-        }
-
         private void LoadTeacherDisciplines()
         {
             try
@@ -617,7 +991,7 @@ namespace UniversityGradesSystem.Forms
                         disciplineGrid.Columns["Name"].Width = 300;
                     }
 
-                    DatabaseManager.Instance.LogAction(userId, "DATA_LOADED", $"Загружены дисциплины преподавателя: {disciplines.Count} записей");
+                    DatabaseManager.Instance.LogAction(userId, "DATA_LOADED", string.Format("Загружены дисциплины преподавателя: {0} записей", disciplines.Count));
                 }
                 else
                 {
@@ -627,9 +1001,9 @@ namespace UniversityGradesSystem.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка загрузки дисциплин: {ex.Message}", "Ошибка",
+                MessageBox.Show(string.Format("Ошибка загрузки дисциплин: {0}", ex.Message), "Ошибка",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
-                DatabaseManager.Instance.LogAction(userId, "ERROR", $"Ошибка загрузки дисциплин: {ex.Message}");
+                DatabaseManager.Instance.LogAction(userId, "ERROR", string.Format("Ошибка загрузки дисциплин: {0}", ex.Message));
             }
         }
 
@@ -638,11 +1012,11 @@ namespace UniversityGradesSystem.Forms
         {
             try
             {
-                DatabaseManager.Instance.LogAction(userId, "LOGOUT", $"Пользователь завершил работу с системой");
+                DatabaseManager.Instance.LogAction(userId, "LOGOUT", "Пользователь завершил работу с системой");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Ошибка логирования выхода: {ex.Message}");
+                Console.WriteLine(string.Format("Ошибка логирования выхода: {0}", ex.Message));
             }
 
             base.OnFormClosing(e);

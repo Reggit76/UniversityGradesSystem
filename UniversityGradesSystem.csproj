@@ -187,6 +187,7 @@
     <Compile Include="Forms\SpecialtyManagementForm.Designer.cs">
       <DependentUpon>SpecialtyManagementForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\DictionaryExtensions.cs" />
     <Compile Include="Models\AuditLog.cs" />
     <Compile Include="Models\Course.cs" />
     <Compile Include="Models\DisciplineSemester.cs" />
@@ -198,6 +199,7 @@
     <Compile Include="Models\SpecialtyCurriculum.cs" />
     <Compile Include="Models\Student.cs" />
     <Compile Include="Models\Discipline.cs" />
+    <Compile Include="Models\StudentWithGroup.cs" />
     <Compile Include="Models\Teacher.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="Program.cs" />
@@ -239,7 +241,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Helpers\" />
     <Folder Include="Reports\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

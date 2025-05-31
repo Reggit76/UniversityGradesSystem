@@ -259,9 +259,9 @@ namespace UniversityGradesSystem.Forms
                 BackColor = Color.FromArgb(240, 244, 247),
                 UseVisualStyleBackColor = true
             };
-            CreateTopStudentsTab();
+            //CreateTopStudentsTab();
 
-            tabControl.TabPages.AddRange(new TabPage[] { overviewTab, detailsTab, topStudentsTab });
+            tabControl.TabPages.AddRange(new TabPage[] { overviewTab, detailsTab/*, topStudentsTab */ });
         }
 
         private void CreateOverviewTab()
