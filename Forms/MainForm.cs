@@ -707,6 +707,7 @@ namespace UniversityGradesSystem.Forms
                     // УБИРАЕМ вызов LoadStudents() - теперь загрузка происходит в самой вкладке
                     AddAdminTabs();
                     AddSpecialtyTabs(); // Добавляем новые вкладки для специальностей
+                    AddTeacherManagementTab(); // НОВОЕ: Добавляем вкладку для управления преподавателями
                 }
 
                 DatabaseManager.Instance.LogAction(userId, "UI_INITIALIZED", string.Format("Интерфейс инициализирован для роли: {0}", role));
@@ -875,6 +876,83 @@ namespace UniversityGradesSystem.Forms
                 // Создаем заглушку в случае ошибки
                 CreateSpecialtyTabStub();
             }
+        }
+
+        // НОВЫЙ МЕТОД: Добавление вкладки управления преподавателями
+        private void AddTeacherManagementTab()
+        {
+            try
+            {
+                // === Вкладка управления преподавателями ===
+                TabPage teachersTab = new TabPage("👨‍🏫 Преподаватели");
+                teachersTab.BackColor = Color.FromArgb(250, 250, 250);
+                teachersTab.UseVisualStyleBackColor = true;
+
+                // Встраиваем форму управления преподавателями
+                TeacherManagementForm teachersForm = new TeacherManagementForm(userId);
+
+                teachersForm.TopLevel = false;
+                teachersForm.FormBorderStyle = FormBorderStyle.None;
+                teachersForm.Dock = DockStyle.Fill;
+                teachersForm.Visible = true;
+
+                teachersTab.Controls.Add(teachersForm);
+                teachersForm.Show();
+
+                tabControl.TabPages.Add(teachersTab);
+
+                DatabaseManager.Instance.LogAction(userId, "TAB_CREATED", "Создана вкладка управления преподавателями");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(string.Format("Ошибка создания вкладки преподавателей: {0}", ex.Message), "Ошибка",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                DatabaseManager.Instance.LogAction(userId, "ERROR", string.Format("Ошибка создания вкладки преподавателей: {0}", ex.Message));
+
+                // Создаем заглушку в случае ошибки
+                CreateTeacherTabStub();
+            }
+        }
+
+        // НОВЫЙ МЕТОД: Создание заглушки для вкладки преподавателей
+        private void CreateTeacherTabStub()
+        {
+            TabPage teachersTab = new TabPage("👨‍🏫 Преподаватели");
+            teachersTab.BackColor = Color.FromArgb(250, 250, 250);
+            teachersTab.UseVisualStyleBackColor = true;
+
+            // Простая карточка для управления преподавателями
+            FlowLayoutPanel flowPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = true,
+                Padding = new Padding(20),
+                AutoScroll = true
+            };
+
+            Panel teacherManagementCard = CreateManagementCard(
+                "👨‍🏫 Управление преподавателями",
+                "Добавление, редактирование и управление дисциплинами преподавателей",
+                Color.FromArgb(52, 152, 219),
+                (sender, e) =>
+                {
+                    try
+                    {
+                        TeacherManagementForm form = new TeacherManagementForm(userId);
+                        form.ShowDialog();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(string.Format("Ошибка открытия управления преподавателями: {0}", ex.Message), "Ошибка",
+                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            );
+
+            flowPanel.Controls.Add(teacherManagementCard);
+            teachersTab.Controls.Add(flowPanel);
+            tabControl.TabPages.Add(teachersTab);
         }
 
         private void CreateSpecialtyTabStub()
