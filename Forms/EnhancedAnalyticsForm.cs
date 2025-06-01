@@ -1,4 +1,6 @@
-﻿using System;
+﻿// This is a personal academic project. Dear PVS-Studio, please check it.
+
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -30,7 +32,6 @@ namespace UniversityGradesSystem.Forms
         // Вкладки
         private TabPage overviewTab;
         private TabPage detailsTab;
-        private TabPage topStudentsTab;
 
         // Графики
         private Chart performanceChart;
@@ -38,7 +39,6 @@ namespace UniversityGradesSystem.Forms
 
         // Панели данных
         private Panel statsPanel;
-        private DataGridView topStudentsGrid;
         private DataGridView groupDetailsGrid;
 
         public EnhancedAnalyticsForm(int userId, string role)
@@ -253,15 +253,7 @@ namespace UniversityGradesSystem.Forms
             };
             CreateDetailsTab();
 
-            // === Вкладка "Топ студенты" ===
-            topStudentsTab = new TabPage("🏆 Лучшие студенты")
-            {
-                BackColor = Color.FromArgb(240, 244, 247),
-                UseVisualStyleBackColor = true
-            };
-            //CreateTopStudentsTab();
-
-            tabControl.TabPages.AddRange(new TabPage[] { overviewTab, detailsTab/*, topStudentsTab */ });
+            tabControl.TabPages.AddRange(new TabPage[] { overviewTab, detailsTab });
         }
 
         private void CreateOverviewTab()
@@ -361,51 +353,6 @@ namespace UniversityGradesSystem.Forms
             detailsTab.Controls.Add(detailsLayout);
         }
 
-        private void CreateTopStudentsTab()
-        {
-            TableLayoutPanel topStudentsLayout = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = 1,
-                RowCount = 1,
-                Padding = new Padding(15)
-            };
-
-            topStudentsGrid = new DataGridView
-            {
-                Dock = DockStyle.Fill,
-                AutoGenerateColumns = false,
-                AllowUserToAddRows = false,
-                AllowUserToDeleteRows = false,
-                ReadOnly = true,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.Fixed3D,
-                ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize,
-                Font = new Font("Segoe UI", 9F),
-                GridColor = Color.FromArgb(224, 224, 224),
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                RowHeadersVisible = false
-            };
-
-            // Колонки для топ студентов
-            topStudentsGrid.Columns.AddRange(new DataGridViewColumn[]
-            {
-                new DataGridViewTextBoxColumn { Name = "Rank", HeaderText = "№", Width = 50 },
-                new DataGridViewTextBoxColumn { Name = "StudentName", HeaderText = "ФИО студента", Width = 300 },
-                new DataGridViewTextBoxColumn { Name = "AverageGrade", HeaderText = "Средний балл", Width = 120 },
-                new DataGridViewTextBoxColumn { Name = "TotalGrades", HeaderText = "Всего оценок", Width = 120 }
-            });
-
-            // Стилизация
-            topStudentsGrid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(52, 73, 94);
-            topStudentsGrid.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            topStudentsGrid.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            topStudentsGrid.ColumnHeadersHeight = 35;
-
-            topStudentsLayout.Controls.Add(topStudentsGrid, 0, 0);
-            topStudentsTab.Controls.Add(topStudentsLayout);
-        }
-
         private void InitializeCharts()
         {
             // === График успеваемости (круговой) ===
@@ -434,14 +381,44 @@ namespace UniversityGradesSystem.Forms
         {
             try
             {
-                // Загрузка групп
-                var groups = groupService.GetAllGroups();
+                // Загрузка групп - ИСПРАВЛЕННАЯ ЛОГИКА
+                List<Group> groups;
+
+                if (userRole == "teacher" && teacherId.HasValue)
+                {
+                    // Для преподавателей загружаем только связанные группы
+                    groups = groupService.GetGroupsByTeacher(teacherId.Value);
+
+                    if (!groups.Any())
+                    {
+                        MessageBox.Show("У вас нет назначенных дисциплин для групп.", "Информация",
+                            MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        // Добавляем пустую группу для отображения
+                        groups.Add(new Group { Id = -2, Name = "Нет доступных групп" });
+                    }
+                }
+                else
+                {
+                    // Для администраторов загружаем все группы
+                    groups = groupService.GetAllGroups();
+                }
+
                 if (groups.Any())
                 {
                     cmbGroup.DisplayMember = "Name";
                     cmbGroup.ValueMember = "Id";
-                    cmbGroup.DataSource = new List<Group> { new Group { Id = -1, Name = "Все группы" } }
-                        .Concat(groups).ToList();
+
+                    var groupList = new List<Group>();
+
+                    // Добавляем "Все группы" только если есть реальные группы
+                    if (groups.Any(g => g.Id > 0))
+                    {
+                        groupList.Add(new Group { Id = -1, Name = "Все группы" });
+                    }
+
+                    groupList.AddRange(groups);
+
+                    cmbGroup.DataSource = groupList;
                     cmbGroup.SelectedIndex = 0;
                 }
 
@@ -475,6 +452,15 @@ namespace UniversityGradesSystem.Forms
                     {
                         LoadOverallAnalytics();
                     }
+                    else if (selectedGroup.Id == -2)
+                    {
+                        // Нет доступных групп - показываем пустую аналитику
+                        var emptyAnalytics = new GroupAnalytics();
+                        UpdateStatsPanel(emptyAnalytics);
+                        UpdatePerformanceChart(emptyAnalytics);
+                        UpdateGradesChart(emptyAnalytics);
+                        UpdateGroupDetailsGrid(new List<GroupSummary>());
+                    }
                     else
                     {
                         LoadGroupAnalytics(selectedGroup.Id);
@@ -492,6 +478,17 @@ namespace UniversityGradesSystem.Forms
         {
             try
             {
+                // ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА для преподавателей
+                if (userRole == "teacher" && teacherId.HasValue)
+                {
+                    if (!groupService.IsGroupRelatedToTeacher(groupId, teacherId.Value))
+                    {
+                        MessageBox.Show("У вас нет прав для просмотра аналитики этой группы.", "Доступ запрещен",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                }
+
                 // Сначала пробуем расширенную аналитику
                 var analytics = analyticsService.GetGroupAnalytics(groupId);
 
@@ -508,8 +505,11 @@ namespace UniversityGradesSystem.Forms
                 UpdatePerformanceChart(analytics);
                 UpdateGradesChart(analytics);
 
-                // Обновляем топ студентов
-                LoadTopStudents(groupId);
+                // Обновляем детали только для конкретной группы
+                if (groupId > 0)
+                {
+                    UpdateGroupDetailsForSingleGroup(groupId);
+                }
             }
             catch (Exception ex)
             {
@@ -528,8 +528,16 @@ namespace UniversityGradesSystem.Forms
                 // Если нет данных из расширенной функции, получаем простую аналитику
                 if (!groupsSummary.Any())
                 {
-                    // Получаем список групп и собираем аналитику для каждой
-                    var groups = groupService.GetAllGroups();
+                    List<Group> groups;
+                    if (userRole == "teacher" && teacherId.HasValue)
+                    {
+                        groups = groupService.GetGroupsByTeacher(teacherId.Value);
+                    }
+                    else
+                    {
+                        groups = groupService.GetAllGroups();
+                    }
+
                     var totalAnalytics = new GroupAnalytics();
 
                     foreach (var group in groups)
@@ -571,6 +579,14 @@ namespace UniversityGradesSystem.Forms
                 }
                 else
                 {
+                    // Фильтруем группы для преподавателей
+                    if (userRole == "teacher" && teacherId.HasValue)
+                    {
+                        var teacherGroups = groupService.GetGroupsByTeacher(teacherId.Value);
+                        var teacherGroupIds = teacherGroups.Select(g => g.Id).ToHashSet();
+                        groupsSummary = groupsSummary.Where(gs => teacherGroupIds.Contains(gs.GroupId)).ToList();
+                    }
+
                     // Для общей аналитики используем суммарные данные
                     var totalAnalytics = CalculateOverallAnalytics(groupsSummary);
 
@@ -727,62 +743,6 @@ namespace UniversityGradesSystem.Forms
             gradesDistributionChart.Series["Grades"].Points[3].Color = Color.FromArgb(231, 76, 60);
         }
 
-        private void LoadTopStudents(int groupId)
-        {
-            try
-            {
-                var topStudents = analyticsService.GetTopStudentsByGroup(groupId, 10);
-
-                topStudentsGrid.Rows.Clear();
-
-                if (topStudents == null || !topStudents.Any())
-                {
-                    // Если нет данных, показываем сообщение
-                    var rowIndex = topStudentsGrid.Rows.Add();
-                    var row = topStudentsGrid.Rows[rowIndex];
-                    row.Cells["Rank"].Value = "-";
-                    row.Cells["StudentName"].Value = "Нет данных о студентах";
-                    row.Cells["AverageGrade"].Value = "-";
-                    row.Cells["TotalGrades"].Value = "-";
-                    row.DefaultCellStyle.ForeColor = Color.Gray;
-                    return;
-                }
-
-                for (int i = 0; i < topStudents.Count; i++)
-                {
-                    var student = topStudents[i];
-                    var rowIndex = topStudentsGrid.Rows.Add();
-                    var row = topStudentsGrid.Rows[rowIndex];
-
-                    row.Cells["Rank"].Value = i + 1;
-                    row.Cells["StudentName"].Value = student.StudentName ?? "Неизвестно";
-                    row.Cells["AverageGrade"].Value = student.AverageGrade.ToString("F2");
-                    row.Cells["TotalGrades"].Value = student.TotalGrades;
-
-                    // Выделяем топ-3 цветом
-                    if (i < 3)
-                    {
-                        var colors = new[] { Color.Gold, Color.Silver, Color.FromArgb(205, 127, 50) };
-                        row.DefaultCellStyle.BackColor = Color.FromArgb(20, colors[i]);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Ошибка загрузки топ студентов для группы {groupId}: {ex.Message}");
-
-                // В случае ошибки показываем сообщение об ошибке
-                topStudentsGrid.Rows.Clear();
-                var rowIndex = topStudentsGrid.Rows.Add();
-                var row = topStudentsGrid.Rows[rowIndex];
-                row.Cells["Rank"].Value = "!";
-                row.Cells["StudentName"].Value = "Ошибка загрузки данных";
-                row.Cells["AverageGrade"].Value = "-";
-                row.Cells["TotalGrades"].Value = "-";
-                row.DefaultCellStyle.ForeColor = Color.Red;
-            }
-        }
-
         private void UpdateGroupDetailsGrid(List<GroupSummary> groupsSummary)
         {
             groupDetailsGrid.Columns.Clear();
@@ -810,6 +770,45 @@ namespace UniversityGradesSystem.Forms
             }
         }
 
+        private void UpdateGroupDetailsForSingleGroup(int groupId)
+        {
+            try
+            {
+                // Получаем информацию о конкретной группе
+                var allGroups = groupService.GetAllGroups();
+                var group = allGroups.FirstOrDefault(g => g.Id == groupId);
+
+                if (group != null)
+                {
+                    var analytics = analyticsService.GetGroupAnalytics(groupId);
+                    if (analytics.TotalStudents == 0)
+                    {
+                        analytics = analyticsService.GetSimpleGroupAnalytics(groupId);
+                    }
+
+                    var singleGroupSummary = new List<GroupSummary>
+                    {
+                        new GroupSummary
+                        {
+                            GroupName = group.Name,
+                            GroupId = group.Id,
+                            SpecialtyName = "Не определена",
+                            CourseNumber = 1,
+                            TotalStudents = analytics.TotalStudents,
+                            AverageGrade = analytics.AverageGrade,
+                            ExcellentPercentage = analytics.ExcellentPercentage
+                        }
+                    };
+
+                    UpdateGroupDetailsGrid(singleGroupSummary);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка обновления деталей для группы {groupId}: {ex.Message}");
+            }
+        }
+
         // Обработчики событий
         private void CmbGroup_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -823,6 +822,7 @@ namespace UniversityGradesSystem.Forms
 
         private void BtnRefresh_Click(object sender, EventArgs e)
         {
+            LoadData();
             LoadAnalytics();
         }
     }

@@ -1,8 +1,11 @@
-﻿using System;
+﻿// This is a personal academic project. Dear PVS-Studio, please check it.
+
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
 using System.Windows.Forms;
 using System.Drawing;
 using UniversityGradesSystem.Models;
 using UniversityGradesSystem.Services;
+using System;
 
 namespace UniversityGradesSystem.Forms
 {
