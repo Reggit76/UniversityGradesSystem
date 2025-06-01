@@ -173,15 +173,11 @@ namespace UniversityGradesSystem.Forms
 
             // Информационный текст
             this.lblInfo = new Label();
-            this.lblInfo.Text = "💡 Тестовые учетные записи:\n\n" +
-                               "👑 Администратор: admin_user / admin123\n\n" +
-                               "👨‍🏫 Преподаватели:\n" +
-                               "     • kochkurov / password (IT дисциплины)\n" +
-                               "     • ershov / password (Математика и системы)";
+            this.lblInfo.Text = "По поводу данных входа обращайтесь в тех отдел!";
             this.lblInfo.Font = new Font("Segoe UI", 9F);
             this.lblInfo.ForeColor = Color.FromArgb(52, 73, 94);
             this.lblInfo.Location = new Point(15, 10);
-            this.lblInfo.Size = new Size(370, 110);
+            this.lblInfo.Size = new Size(370, 30);
             this.lblInfo.TextAlign = ContentAlignment.TopLeft;
 
             this.infoPanel.Controls.Add(this.lblInfo);

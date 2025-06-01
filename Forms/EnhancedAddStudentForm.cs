@@ -48,7 +48,7 @@ namespace UniversityGradesSystem.Forms
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.StartPosition = FormStartPosition.CenterParent;
-            this.Size = new Size(500, 480); // Увеличили размер формы
+            this.Size = new Size(500, 500);
 
             // === Главный контейнер ===
             mainLayout = new TableLayoutPanel
